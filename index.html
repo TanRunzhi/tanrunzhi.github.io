@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>tan___腾讯edge测试</title>
+<style>
+  :root{
+    --brand:#006eff;
+    --brand-2:#00c2ff;
+    --bg:#0b1020;
+    --card:rgba(255,255,255,.06);
+    --line:rgba(255,255,255,.14);
+    --txt:#e8ecf5;
+    --sub:#96a0b5;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    min-height:100vh;
+    font-family:"Segoe UI","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+    color:var(--txt);
+    background:
+      radial-gradient(1000px 600px at 12% -10%, #1a3a7a 0%, transparent 60%),
+      radial-gradient(900px 500px at 100% 0%, #0b5c66 0%, transparent 55%),
+      var(--bg);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+  }
+  .wrap{
+    width:min(720px,100%);
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:20px;
+    padding:36px 32px;
+    backdrop-filter:blur(14px);
+    box-shadow:0 30px 80px rgba(0,0,0,.45);
+    animation:rise .6s ease both;
+  }
+  @keyframes rise{
+    from{opacity:0;transform:translateY(18px)}
+    to{opacity:1;transform:none}
+  }
+  .tag{
+    display:inline-block;
+    font-size:12px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:#9fd0ff;
+    border:1px solid rgba(120,190,255,.35);
+    background:rgba(0,110,255,.12);
+    padding:5px 12px;
+    border-radius:999px;
+    margin-bottom:18px;
+  }
+  h1{
+    font-size:clamp(26px,5vw,40px);
+    line-height:1.2;
+    background:linear-gradient(92deg,#fff 0%,var(--brand-2) 60%,var(--brand) 100%);
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+    word-break:break-word;
+  }
+  h1 .mono{
+    font-family:ui-monospace,Consolas,"Courier New",monospace;
+  }
+  p.desc{
+    margin-top:14px;
+    color:var(--sub);
+    line-height:1.8;
+    font-size:15px;
+  }
+  .meta{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+    gap:12px;
+    margin-top:26px;
+  }
+  .item{
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:14px 16px;
+    background:rgba(255,255,255,.03);
+  }
+  .item .k{font-size:12px;color:var(--sub);letter-spacing:.04em}
+  .item .v{
+    margin-top:6px;
+    font-family:ui-monospace,Consolas,monospace;
+    font-size:14px;
+    color:#cfe3ff;
+    word-break:break-all;
+  }
+  .btns{display:flex;flex-wrap:wrap;gap:12px;margin-top:28px}
+  button{
+    font:inherit;
+    font-size:14px;
+    cursor:pointer;
+    border-radius:10px;
+    padding:11px 20px;
+    border:1px solid var(--line);
+    background:rgba(255,255,255,.05);
+    color:var(--txt);
+    transition:.2s;
+  }
+  button:hover{background:rgba(255,255,255,.12);transform:translateY(-1px)}
+  button.primary{
+    border-color:transparent;
+    background:linear-gradient(92deg,var(--brand),var(--brand-2));
+    color:#04101f;
+    font-weight:600;
+  }
+  button.primary:hover{filter:brightness(1.08)}
+  .log{
+    margin-top:22px;
+    border:1px dashed var(--line);
+    border-radius:12px;
+    padding:12px 14px;
+    font-family:ui-monospace,Consolas,monospace;
+    font-size:13px;
+    color:#a9ffd8;
+    min-height:44px;
+    white-space:pre-wrap;
+    word-break:break-all;
+  }
+  footer{
+    margin-top:24px;
+    font-size:12px;
+    color:#67718a;
+    text-align:center;
+  }
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <span class="tag">Demo Page</span>
+    <h1><span class="mono">tan___</span>腾讯edge测试</h1>
+    <p class="desc">
+      这是一个用于测试的静态 HTML 示例页面，包含基础样式、按钮交互与运行环境信息检测。
+      推荐使用 Microsoft Edge 浏览器打开查看效果。
+    </p>
+
+    <section class="meta">
+      <div class="item">
+        <div class="k">浏览器</div>
+        <div class="v" id="ua-browser">检测中…</div>
+      </div>
+      <div class="item">
+        <div class="k">渲染引擎</div>
+        <div class="v" id="ua-engine">检测中…</div>
+      </div>
+      <div class="item">
+        <div class="k">窗口尺寸</div>
+        <div class="v" id="ua-size">—</div>
+      </div>
+      <div class="item">
+        <div class="k">当前时间</div>
+        <div class="v" id="ua-time">—</div>
+      </div>
+    </section>
+
+    <div class="btns">
+      <button class="primary" id="btn-hello">点我测试</button>
+      <button id="btn-info">输出环境信息</button>
+      <button id="btn-clear">清空日志</button>
+    </div>
+
+    <div class="log" id="log">// 日志输出区</div>
+
+    <footer>tan___腾讯edge测试 · 仅用于本地演示</footer>
+  </main>
+
+<script>
+  const $ = id => document.getElementById(id);
+  const logEl = $('log');
+  let count = 0;
+
+  function log(msg){
+    const t = new Date().toLocaleTimeString('zh-CN', {hour12:false});
+    logEl.textContent = `[${t}] ${msg}`;
+  }
+
+  function detectBrowser(){
+    const ua = navigator.userAgent;
+    let browser = '未知浏览器';
+    let engine = '未知';
+
+    if (/Edg\//.test(ua)) browser = 'Microsoft Edge';
+    else if (/OPR\/|Opera/.test(ua)) browser = 'Opera';
+    else if (/Firefox\//.test(ua)) browser = 'Firefox';
+    else if (/Chrome\//.test(ua)) browser = 'Chrome';
+    else if (/Safari\//.test(ua)) browser = 'Safari';
+
+    if (/AppleWebKit/.test(ua)) engine = 'Blink / WebKit';
+    if (/Gecko\//.test(ua) && /Firefox/.test(ua)) engine = 'Gecko';
+
+    const v = (ua.match(/(Edg|Chrome|Firefox|Version)\/([\d.]+)/) || [])[2];
+    return { browser: v ? `${browser} ${v}` : browser, engine };
+  }
+
+  function updateEnv(){
+    const { browser, engine } = detectBrowser();
+    $('ua-browser').textContent = browser;
+    $('ua-engine').textContent = engine;
+    $('ua-size').textContent = `${window.innerWidth} × ${window.innerHeight}`;
+    $('ua-time').textContent = new Date().toLocaleString('zh-CN', {hour12:false});
+  }
+
+  $('btn-hello').addEventListener('click', () => {
+    count++;
+    log(`测试成功 ✅ 这是第 ${count} 次点击 —— tan___腾讯edge测试`);
+  });
+
+  $('btn-info').addEventListener('click', () => {
+    const { browser, engine } = detectBrowser();
+    log(
+      `浏览器: ${browser}\n` +
+      `引擎: ${engine}\n` +
+      `语言: ${navigator.language}\n` +
+      `在线: ${navigator.onLine ? '是' : '否'}\n` +
+      `DPR: ${window.devicePixelRatio}`
+    );
+  });
+
+  $('btn-clear').addEventListener('click', () => {
+    logEl.textContent = '// 日志输出区';
+    count = 0;
+  });
+
+  window.addEventListener('resize', updateEnv);
+  updateEnv();
+  setInterval(updateEnv, 1000);
+</script>
+</body>
+</html>
