@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>加解密工具</title>
+<style>
+  :root{
+    --brand:#2563eb;
+    --brand-2:#38bdf8;
+    --bg:#f5f7fb;
+    --card:#ffffff;
+    --line:#e5e9f2;
+    --txt:#1e293b;
+    --sub:#64748b;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    min-height:100vh;
+    font-family:"Segoe UI","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+    color:var(--txt);
+    background:
+      radial-gradient(1000px 600px at 10% -10%, rgba(59,130,246,.14) 0%, transparent 60%),
+      radial-gradient(900px 500px at 100% 0%, rgba(56,189,248,.12) 0%, transparent 55%),
+      var(--bg);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+  }
+  .wrap{
+    position:relative;
+    width:min(760px,100%);
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:24px;
+    padding:40px 36px;
+    box-shadow:
+      0 1px 2px rgba(15,23,42,.04),
+      0 24px 60px -24px rgba(15,23,42,.18);
+    animation:rise .6s ease both;
+  }
+  /* 本地数据切换按钮锚点：固定在卡片右上角 */
+  #ldb-toggle-anchor{
+    position:absolute; top:16px; right:18px; z-index:5;
+  }
+  /* 抽屉打开时，卡片整体左移避让（宽度跟随抽屉实时宽度） */
+  body.ldb-open .wrap{
+    margin-right:var(--ldb-w,30vw);
+    transition:margin-right .25s ease;
+  }
+  @keyframes rise{
+    from{opacity:0;transform:translateY(18px)}
+    to{opacity:1;transform:none}
+  }
+  .tag{
+    display:inline-block;
+    font-size:12px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:#2563eb;
+    border:1px solid rgba(37,99,235,.25);
+    background:rgba(37,99,235,.07);
+    padding:5px 12px;
+    border-radius:999px;
+    margin-bottom:18px;
+  }
+  h1{
+    font-size:clamp(24px,5vw,34px);
+    line-height:1.2;
+    background:linear-gradient(92deg,#0f172a 0%,var(--brand) 65%,var(--brand-2) 100%);
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+    word-break:break-word;
+  }
+  p.desc{
+    margin-top:12px;
+    color:var(--sub);
+    line-height:1.8;
+    font-size:15px;
+  }
+  .note{
+    margin-top:20px;
+    font-size:13px;
+    line-height:1.7;
+    color:#1d4ed8;
+    background:rgba(37,99,235,.06);
+    border:1px solid rgba(37,99,235,.2);
+    border-radius:12px;
+    padding:12px 14px;
+  }
+  .tabs{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-top:24px;
+  }
+  .tab{
+    font:inherit;
+    font-size:14px;
+    cursor:pointer;
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:10px 18px;
+    background:#fff;
+    color:var(--txt);
+    box-shadow:0 1px 2px rgba(15,23,42,.05);
+    transition:.2s;
+  }
+  .tab:hover{border-color:rgba(37,99,235,.35)}
+  .tab.active{
+    border-color:rgba(37,99,235,.3);
+    background:linear-gradient(92deg,#e8f1ff,#e0f7ff);
+    color:#1d4ed8;
+    font-weight:600;
+    box-shadow:0 6px 16px -10px rgba(37,99,235,.45);
+  }
+  .panel{margin-top:20px}
+  label{
+    display:block;
+    font-size:13px;
+    color:var(--sub);
+    margin:14px 0 6px;
+  }
+  textarea, input[type=text]{
+    width:100%;
+    font:inherit;
+    font-size:14px;
+    color:var(--txt);
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:12px 14px;
+    outline:none;
+    resize:vertical;
+    transition:border-color .2s, box-shadow .2s;
+  }
+  textarea:focus, input[type=text]:focus{
+    border-color:rgba(37,99,235,.5);
+    box-shadow:0 0 0 4px rgba(37,99,235,.12);
+  }
+  textarea{min-height:96px;font-family:ui-monospace,Consolas,monospace}
+  .actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+  .btn-act{
+    font:inherit;
+    font-size:14px;
+    cursor:pointer;
+    border-radius:10px;
+    padding:10px 18px;
+    border:1px solid var(--line);
+    background:#fff;
+    color:var(--txt);
+    box-shadow:0 1px 2px rgba(15,23,42,.05);
+    transition:.2s;
+  }
+  .btn-act:hover{border-color:rgba(37,99,235,.35);transform:translateY(-1px)}
+  .btn-act.primary{
+    border-color:rgba(37,99,235,.3);
+    background:linear-gradient(92deg,#e8f1ff,#e0f7ff);
+    color:#1d4ed8;
+    font-weight:600;
+    box-shadow:0 6px 16px -10px rgba(37,99,235,.45);
+  }
+  .btn-act.ghost{
+    color:var(--sub);
+  }
+  .result{
+    margin-top:16px;
+    border:1px dashed #cbd5e1;
+    border-radius:12px;
+    padding:12px 14px;
+    font-family:ui-monospace,Consolas,monospace;
+    font-size:13px;
+    color:#0f766e;
+    background:#f8fafc;
+    min-height:48px;
+    white-space:pre-wrap;
+    word-break:break-all;
+  }
+  .history{
+    margin-top:30px;
+    border-top:1px solid var(--line);
+    padding-top:22px;
+  }
+  .history h2{
+    font-size:17px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+  }
+  .history .clear{
+    font:inherit;
+    font-size:12px;
+    cursor:pointer;
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:6px 12px;
+    background:#fff;
+    color:var(--sub);
+    transition:.2s;
+  }
+  .history .clear:hover{border-color:#ef4444;color:#ef4444}
+  .records{margin-top:14px;display:flex;flex-direction:column;gap:10px}
+  .rec{
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:12px 14px;
+    background:#f8fafc;
+  }
+  .rec .top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    font-size:12px;
+    color:var(--sub);
+  }
+  .rec .badge{
+    font-size:11px;
+    color:#1d4ed8;
+    background:rgba(37,99,235,.08);
+    border:1px solid rgba(37,99,235,.2);
+    border-radius:999px;
+    padding:2px 10px;
+  }
+  .rec .del{
+    cursor:pointer;
+    border:none;
+    background:none;
+    color:#94a3b8;
+    font-size:16px;
+    line-height:1;
+  }
+  .rec .del:hover{color:#ef4444}
+  .rec .io{
+    margin-top:8px;
+    font-size:12px;
+    font-family:ui-monospace,Consolas,monospace;
+    word-break:break-all;
+  }
+  .rec .io .k{color:var(--sub)}
+  .rec .io .v{color:#334155}
+  .empty{margin-top:12px;color:var(--sub);font-size:13px}
+  footer{
+    margin-top:28px;
+    font-size:12px;
+    color:#94a3b8;
+    text-align:center;
+  }
+  .back{
+    display:inline-block;
+    margin-bottom:16px;
+    font-size:13px;
+    color:#2563eb;
+    text-decoration:none;
+    border:1px solid rgba(37,99,235,.25);
+    background:rgba(37,99,235,.06);
+    padding:6px 14px;
+    border-radius:999px;
+    transition:.2s;
+  }
+  .back:hover{background:rgba(37,99,235,.12)}
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <div id="ldb-toggle-anchor"></div>
+    <a class="back" href="../index.html">← 返回主页</a>
+    <span class="tag">Crypto Tool</span>
+    <h1>加解密工具</h1>
+    <p class="desc">支持 Base64、AES、SHA1、MD5 多种算法，可编码、加密与生成摘要。</p>
+
+    <div class="note">
+      🔒 说明：所有加解密操作均在你的浏览器本地完成，<b>历史记录仅保存在当前浏览器的 localStorage 中，不会上传到任何服务器</b>。
+      因此他人无法通过这些记录获取你的数据；同时清除浏览器数据或更换设备后，历史记录将无法查看。请妥善保管密钥，密钥丢失将无法解密。
+    </div>
+
+    <div class="tabs" id="tabs">
+      <button class="tab active" data-algo="base64">Base64</button>
+      <button class="tab" data-algo="aes">AES</button>
+      <button class="tab" data-algo="sha1">SHA1</button>
+      <button class="tab" data-algo="md5">MD5</button>
+    </div>
+
+    <div class="panel" id="panel">
+      <label id="lbl-input">输入内容</label>
+      <textarea id="input" placeholder="请输入要处理的内容…"></textarea>
+
+      <div id="key-wrap" style="display:none">
+        <label>密钥（密码）</label>
+        <input type="text" id="key" placeholder="请输入加密/解密使用的密钥">
+      </div>
+
+      <div class="actions" id="actions"></div>
+
+      <div class="result" id="result">// 结果输出区</div>
+    </div>
+
+    <section class="history">
+      <h2>历史记录 <button class="clear" id="clear-all">清空全部</button></h2>
+      <div class="records" id="records"></div>
+    </section>
+
+    <footer>tanrunzhi.github.io · 加解密工具</footer>
+  </main>
+
+<script src="../assets/snippets.js"></script>
+<script src="../assets/localdb-panel.js"></script>
+<script>
+/* ---------------- 基础工具 ---------------- */
+function strToBytes(str){ return new TextEncoder().encode(str); }
+function bytesToStr(bytes){ return new TextDecoder().decode(bytes); }
+function bytesToB64(bytes){ let bin=''; for(let i=0;i<bytes.length;i++) bin+=String.fromCharCode(bytes[i]); return btoa(bin); }
+function b64ToBytes(b64){ const bin=atob(b64); const bytes=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i); return bytes; }
+
+/* ---------------- Base64（UTF-8 安全） ---------------- */
+function b64Encode(s){ return bytesToB64(strToBytes(s)); }
+function b64Decode(s){ return bytesToStr(b64ToBytes(s)); }
+
+/* ---------------- SHA1（Web Crypto） ---------------- */
+async function sha1Hex(s){
+  const buf = await crypto.subtle.digest('SHA-1', strToBytes(s));
+  return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+/* ---------------- MD5（纯 JS 实现，离线可用） ---------------- */
+function md5(msg){
+  function cmn(q,a,b,x,s,t){ a=(((a+q)|0)+((x+t)|0))|0; return (((a<<s)|(a>>>(32-s)))+b)|0; }
+  function ff(a,b,c,d,x,s,t){ return cmn((b&c)|(~b&d),a,b,x,s,t); }
+  function gg(a,b,c,d,x,s,t){ return cmn((b&d)|(c&~d),a,b,x,s,t); }
+  function hh(a,b,c,d,x,s,t){ return cmn(b^c^d,a,b,x,s,t); }
+  function ii(a,b,c,d,x,s,t){ return cmn(c^(b|~d),a,b,x,s,t); }
+  function cycle(x,k){
+    let a=x[0],b=x[1],c=x[2],d=x[3];
+    a=ff(a,b,c,d,k[0],7,-680876936); d=ff(d,a,b,c,k[1],12,-389564586); c=ff(c,d,a,b,k[2],17,606105819); b=ff(b,c,d,a,k[3],22,-1044525330);
+    a=ff(a,b,c,d,k[4],7,-176418897); d=ff(d,a,b,c,k[5],12,1200080426); c=ff(c,d,a,b,k[6],17,-1473231341); b=ff(b,c,d,a,k[7],22,-45705983);
+    a=ff(a,b,c,d,k[8],7,1770035416); d=ff(d,a,b,c,k[9],12,-1958414417); c=ff(c,d,a,b,k[10],17,-42063); b=ff(b,c,d,a,k[11],22,-1990404162);
+    a=ff(a,b,c,d,k[12],7,1804603682); d=ff(d,a,b,c,k[13],12,-40341101); c=ff(c,d,a,b,k[14],17,-1502002290); b=ff(b,c,d,a,k[15],22,1236535329);
+    a=gg(a,b,c,d,k[1],5,-165796510); d=gg(d,a,b,c,k[6],9,-1069501632); c=gg(c,d,a,b,k[11],14,643717713); b=gg(b,c,d,a,k[0],20,-373897302);
+    a=gg(a,b,c,d,k[5],5,-701558691); d=gg(d,a,b,c,k[10],9,38016083); c=gg(c,d,a,b,k[15],14,-660478335); b=gg(b,c,d,a,k[4],20,-405537848);
+    a=gg(a,b,c,d,k[9],5,568446438); d=gg(d,a,b,c,k[14],9,-1019803690); c=gg(c,d,a,b,k[3],14,-187363961); b=gg(b,c,d,a,k[8],20,1163531501);
+    a=gg(a,b,c,d,k[13],5,-1444681467); d=gg(d,a,b,c,k[2],9,-51403784); c=gg(c,d,a,b,k[7],14,1735328473); b=gg(b,c,d,a,k[12],20,-1926607734);
+    a=hh(a,b,c,d,k[5],4,-378558); d=hh(d,a,b,c,k[8],11,-2022574463); c=hh(c,d,a,b,k[11],16,1839030562); b=hh(b,c,d,a,k[14],23,-35309556);
+    a=hh(a,b,c,d,k[1],4,-1530992060); d=hh(d,a,b,c,k[4],11,1272893353); c=hh(c,d,a,b,k[7],16,-155497632); b=hh(b,c,d,a,k[10],23,-1094730640);
+    a=hh(a,b,c,d,k[13],4,681279174); d=hh(d,a,b,c,k[0],11,-358537222); c=hh(c,d,a,b,k[3],16,-722521979); b=hh(b,c,d,a,k[6],23,76029189);
+    a=hh(a,b,c,d,k[9],4,-640364487); d=hh(d,a,b,c,k[12],11,-421815835); c=hh(c,d,a,b,k[15],16,530742520); b=hh(b,c,d,a,k[2],23,-995338651);
+    a=ii(a,b,c,d,k[0],6,-198630844); d=ii(d,a,b,c,k[7],10,1126891415); c=ii(c,d,a,b,k[14],15,-1416354905); b=ii(b,c,d,a,k[5],21,-57434055);
+    a=ii(a,b,c,d,k[12],6,1700485571); d=ii(d,a,b,c,k[3],10,-1894986606); c=ii(c,d,a,b,k[10],15,-1051523); b=ii(b,c,d,a,k[1],21,-2054922799);
+    a=ii(a,b,c,d,k[8],6,1873313359); d=ii(d,a,b,c,k[15],10,-30611744); c=ii(c,d,a,b,k[6],15,-1560198380); b=ii(b,c,d,a,k[13],21,1309151649);
+    a=ii(a,b,c,d,k[4],6,-145523070); d=ii(d,a,b,c,k[11],10,-1120210379); c=ii(c,d,a,b,k[2],15,718787259); b=ii(b,c,d,a,k[9],21,-343485551);
+    x[0]=(a+x[0])|0; x[1]=(b+x[1])|0; x[2]=(c+x[2])|0; x[3]=(d+x[3])|0;
+  }
+  function blk(s){
+    const a=[]; for(let i=0;i<64;i+=4) a[i>>2]=s.charCodeAt(i)+(s.charCodeAt(i+1)<<8)+(s.charCodeAt(i+2)<<16)+(s.charCodeAt(i+3)<<24);
+    return a;
+  }
+  function toUtf8(str){ return unescape(encodeURIComponent(str)); }
+  const s=toUtf8(msg);
+  const state=[1732584193,-271733879,-1732584194,271733878];
+  for(let i=64;i<=s.length;i+=64) cycle(state, blk(s.substring(i-64,i)));
+  let tail=s.substring(i-64);
+  const pad=[]; for(let i=0;i<tail.length;i++) pad[i>>2]=(pad[i>>2]|tail.charCodeAt(i)<<((i%4)<<3));
+  pad[tail.length>>2]|=0x80<<((tail.length%4)<<3);
+  if(tail.length>55){ cycle(state,pad); for(let i=0;i<16;i++) pad[i]=0; }
+  pad[14]=s.length*8;
+  cycle(state,pad);
+  let h=''; for(let i=0;i<4;i++) h+=(state[i]>>>0).toString(16).padStart(8,'0');
+  return h;
+}
+
+/* ---------------- AES（Web Crypto：PBKDF2 + AES-GCM） ---------------- */
+async function aesDeriveKey(password){
+  const enc=new TextEncoder();
+  const km=await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey(
+    { name:'PBKDF2', salt:enc.encode('tanrunzhi-crypto-salt'), iterations:100000, hash:'SHA-256' },
+    km, { name:'AES-GCM', length:256 }, false, ['encrypt','decrypt']
+  );
+}
+async function aesEncrypt(plain, password){
+  const key=await aesDeriveKey(password);
+  const iv=crypto.getRandomValues(new Uint8Array(12));
+  const ct=await crypto.subtle.encrypt({name:'AES-GCM', iv}, key, strToBytes(plain));
+  return bytesToB64(iv)+':'+bytesToB64(new Uint8Array(ct));
+}
+async function aesDecrypt(payload, password){
+  const [ivB64, ctB64]=payload.split(':');
+  const key=await aesDeriveKey(password);
+  const pt=await crypto.subtle.decrypt({name:'AES-GCM', iv:b64ToBytes(ivB64)}, key, b64ToBytes(ctB64));
+  return bytesToStr(pt);
+}
+
+/* ---------------- 历史记录（localStorage） ---------------- */
+const LS_KEY='crypto_history';
+function loadHistory(){
+  try{ return JSON.parse(localStorage.getItem(LS_KEY)) || []; }
+  catch(e){ return []; }
+}
+function saveHistory(list){
+  try{ localStorage.setItem(LS_KEY, JSON.stringify(list)); }catch(e){}
+}
+function addHistory(rec){
+  const list=loadHistory();
+  list.unshift(rec);
+  if(list.length>50) list.length=50;
+  saveHistory(list);
+  renderHistory();
+}
+
+/* ---------------- 界面交互 ---------------- */
+const ALGO_META={
+  base64:{ label:'Base64', key:false, actions:[{t:'encode',n:'编码'},{t:'decode',n:'解码'}] },
+  aes:{ label:'AES', key:true, actions:[{t:'encrypt',n:'加密'},{t:'decrypt',n:'解密'}] },
+  sha1:{ label:'SHA1', key:false, actions:[{t:'hash',n:'生成摘要'}] },
+  md5:{ label:'MD5', key:false, actions:[{t:'hash',n:'生成摘要'}] }
+};
+let current='base64';
+const $=id=>document.getElementById(id);
+
+function buildActions(){
+  const meta=ALGO_META[current];
+  const box=$('actions');
+  box.innerHTML='';
+  meta.actions.forEach(a=>{
+    const b=document.createElement('button');
+    b.className='btn-act primary';
+    b.textContent=a.n;
+    b.onclick=()=>run(a.t);
+    box.appendChild(b);
+  });
+  const copy=document.createElement('button');
+  copy.className='btn-act';
+  copy.textContent='复制结果';
+  copy.onclick=copyResult;
+  box.appendChild(copy);
+}
+
+function selectAlgo(algo){
+  current=algo;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.algo===algo));
+  const meta=ALGO_META[algo];
+  $('key-wrap').style.display = meta.key ? 'block':'none';
+  $('lbl-input').textContent = algo==='aes' ? '明文 / 密文' : '输入内容';
+  $('input').placeholder = algo==='aes' ? '加密时填明文，解密时粘贴 密文' : '请输入要处理的内容…';
+  buildActions();
+}
+
+async function run(type){
+  const input=$('input').value;
+  const resultEl=$('result');
+  if(!input){ resultEl.textContent='// 请输入内容'; return; }
+  const meta=ALGO_META[current];
+  const algoName=meta.label;
+  let output='', actionLabel='';
+
+  try{
+    if(current==='base64'){
+      if(type==='encode'){ output=b64Encode(input); actionLabel='Base64 编码'; }
+      else { try{ output=b64Decode(input); actionLabel='Base64 解码'; }
+        catch(e){ resultEl.textContent='✗ 解码失败：不是合法的 Base64 字符串'; return; } }
+    } else if(current==='sha1'){
+      if(!crypto.subtle){ resultEl.textContent='✗ 当前环境不支持 SHA1（请用 https 或 localhost 访问）'; return; }
+      output=await sha1Hex(input); actionLabel='SHA1 摘要';
+    } else if(current==='md5'){
+      output=md5(input); actionLabel='MD5 摘要';
+    } else if(current==='aes'){
+      if(!crypto.subtle){ resultEl.textContent='✗ 当前环境不支持 AES（请用 https 或 localhost 访问）'; return; }
+      const key=$('key').value;
+      if(!key){ resultEl.textContent='✗ 请输入密钥'; return; }
+      if(type==='encrypt'){ output=await aesEncrypt(input, key); actionLabel='AES 加密'; }
+      else {
+        try{ output=await aesDecrypt(input.trim(), key); actionLabel='AES 解密'; }
+        catch(e){ resultEl.textContent='✗ 解密失败：密钥错误或密文无效'; return; }
+      }
+    }
+    resultEl.textContent=output;
+    addHistory({ algo:algoName, action:actionLabel, input, output, time:Date.now() });
+  }catch(e){
+    resultEl.textContent='✗ 处理失败：'+(e && e.message ? e.message : e);
+  }
+}
+
+function copyResult(){
+  const txt=$('result').textContent;
+  if(!txt || txt.startsWith('//')) return;
+  navigator.clipboard?.writeText(txt).then(()=>{},()=>{});
+}
+
+function fmtTime(ts){
+  const d=new Date(ts);
+  const p=n=>String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+}
+
+function renderHistory(){
+  const list=loadHistory();
+  const box=$('records');
+  box.innerHTML='';
+  if(!list.length){ box.innerHTML='<p class="empty">暂无历史记录</p>'; return; }
+  list.forEach((r,i)=>{
+    const div=document.createElement('div');
+    div.className='rec';
+    div.innerHTML=
+      `<div class="top"><span><span class="badge">${r.algo}</span> ${r.action}</span>`+
+      `<span>${fmtTime(r.time)} <button class="del" data-i="${i}" title="删除">✕</button></span></div>`+
+      `<div class="io"><span class="k">输入：</span><span class="v">${escapeHtml(r.input)}</span></div>`+
+      `<div class="io"><span class="k">输出：</span><span class="v">${escapeHtml(r.output)}</span></div>`;
+    box.appendChild(div);
+  });
+  box.querySelectorAll('.del').forEach(b=>{
+    b.onclick=()=>{ const l=loadHistory(); l.splice(+b.dataset.i,1); saveHistory(l); renderHistory(); };
+  });
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+}
+
+document.querySelectorAll('.tab').forEach(t=> t.onclick=()=>selectAlgo(t.dataset.algo));
+$('clear-all').onclick=()=>{ if(confirm('确定清空全部历史记录？此操作不可恢复。')){ saveHistory([]); renderHistory(); } };
+
+selectAlgo('base64');
+renderHistory();
+</script>
+</body>
+</html>

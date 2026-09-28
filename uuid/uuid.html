@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UUID 生成器</title>
+<style>
+  :root{
+    --brand:#2563eb;
+    --brand-2:#38bdf8;
+    --bg:#f5f7fb;
+    --card:#ffffff;
+    --line:#e5e9f2;
+    --txt:#1e293b;
+    --sub:#64748b;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    min-height:100vh;
+    font-family:"Segoe UI","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+    color:var(--txt);
+    background:
+      radial-gradient(1000px 600px at 10% -10%, rgba(59,130,246,.14) 0%, transparent 60%),
+      radial-gradient(900px 500px at 100% 0%, rgba(56,189,248,.12) 0%, transparent 55%),
+      var(--bg);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+  }
+  .wrap{
+    width:min(760px,100%);
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:24px;
+    padding:40px 36px;
+    box-shadow:
+      0 1px 2px rgba(15,23,42,.04),
+      0 24px 60px -24px rgba(15,23,42,.18);
+    animation:rise .6s ease both;
+  }
+  @keyframes rise{
+    from{opacity:0;transform:translateY(18px)}
+    to{opacity:1;transform:none}
+  }
+  .tag{
+    display:inline-block;
+    font-size:12px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:#2563eb;
+    border:1px solid rgba(37,99,235,.25);
+    background:rgba(37,99,235,.07);
+    padding:5px 12px;
+    border-radius:999px;
+    margin-bottom:18px;
+  }
+  h1{
+    font-size:clamp(24px,5vw,34px);
+    line-height:1.2;
+    background:linear-gradient(92deg,#0f172a 0%,var(--brand) 65%,var(--brand-2) 100%);
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+    word-break:break-word;
+  }
+  p.desc{
+    margin-top:12px;
+    color:var(--sub);
+    line-height:1.8;
+    font-size:15px;
+  }
+  .opts{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:flex-end;
+    gap:16px;
+    margin-top:24px;
+  }
+  .opt{display:flex;flex-direction:column;gap:6px}
+  .opt label, .paste label{
+    font-size:13px;
+    color:var(--sub);
+  }
+  input[type=number]{
+    width:120px;
+    font:inherit;
+    font-size:14px;
+    color:var(--txt);
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:10px 12px;
+    outline:none;
+    transition:border-color .2s, box-shadow .2s;
+  }
+  input[type=number]:focus{
+    border-color:rgba(37,99,235,.5);
+    box-shadow:0 0 0 4px rgba(37,99,235,.12);
+  }
+  .check{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-size:14px;
+    color:var(--txt);
+    cursor:pointer;
+    user-select:none;
+  }
+  .check input{width:16px;height:16px;accent-color:var(--brand);cursor:pointer}
+  .btn-act{
+    font:inherit;font-size:14px;cursor:pointer;
+    border-radius:10px;padding:10px 20px;
+    border:1px solid var(--line);background:#fff;color:var(--txt);
+    box-shadow:0 1px 2px rgba(15,23,42,.05);transition:.2s;
+  }
+  .btn-act:hover{border-color:rgba(37,99,235,.35);transform:translateY(-1px)}
+  .btn-act.primary{
+    border-color:rgba(37,99,235,.3);
+    background:linear-gradient(92deg,#e8f1ff,#e0f7ff);
+    color:#1d4ed8;font-weight:600;
+    box-shadow:0 6px 16px -10px rgba(37,99,235,.45);
+  }
+  .bulk{margin-top:18px;display:flex;gap:10px}
+  .list{margin-top:18px;display:flex;flex-direction:column;gap:8px}
+  .row{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:10px 14px;
+    background:#f8fafc;
+  }
+  .row .uuid{
+    flex:1;
+    font-family:ui-monospace,Consolas,monospace;
+    font-size:14px;
+    color:#334155;
+    word-break:break-all;
+    transition:color .2s;
+  }
+  .row .uuid.copied{color:#16a34a;font-weight:600}
+  .row .copy{
+    font:inherit;font-size:12px;cursor:pointer;
+    border:1px solid rgba(37,99,235,.3);
+    background:linear-gradient(92deg,#e8f1ff,#e0f7ff);
+    color:#1d4ed8;border-radius:8px;padding:6px 14px;transition:.2s;white-space:nowrap;
+  }
+  .row .copy:hover{filter:brightness(.98)}
+  .row .copy.done{color:#16a34a;border-color:rgba(22,163,74,.4);background:rgba(22,163,74,.08)}
+  .paste{margin-top:22px;display:flex;flex-direction:column;gap:6px}
+  .paste textarea{
+    width:100%;min-height:120px;resize:vertical;
+    font:inherit;font-size:13px;
+    font-family:ui-monospace,Consolas,monospace;
+    color:#334155;background:#f8fafc;
+    border:1px solid var(--line);border-radius:12px;padding:12px 14px;outline:none;
+  }
+  .empty{margin-top:14px;color:var(--sub);font-size:13px}
+  footer{margin-top:28px;font-size:12px;color:#94a3b8;text-align:center}
+  .back{
+    display:inline-block;margin-bottom:16px;font-size:13px;color:#2563eb;
+    text-decoration:none;border:1px solid rgba(37,99,235,.25);
+    background:rgba(37,99,235,.06);padding:6px 14px;border-radius:999px;transition:.2s;
+  }
+  .back:hover{background:rgba(37,99,235,.12)}
+  .toast{
+    position:fixed;left:50%;bottom:36px;transform:translateX(-50%) translateY(20px);
+    background:rgba(22,163,74,.95);color:#fff;font-size:14px;
+    padding:10px 20px;border-radius:999px;
+    box-shadow:0 10px 30px -10px rgba(22,163,74,.6);
+    opacity:0;pointer-events:none;transition:.25s;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <a class="back" href="../index.html">← 返回主页</a>
+    <a class="back" href="../data/localdb.html" style="margin-left:8px">🗃️ 本地数据</a>
+    <span class="tag">UUID Generator</span>
+    <h1>UUID 生成器</h1>
+    <p class="desc">生成符合 RFC 4122 的随机 UUID（v4）。可设置数量、是否保留横杠，并逐条或批量复制。</p>
+
+    <div class="opts">
+      <div class="opt">
+        <label for="count">生成数量</label>
+        <input type="number" id="count" min="1" max="1000" value="10">
+      </div>
+      <label class="check">
+        <input type="checkbox" id="nodash" checked>
+        <span>去掉横杠（默认去掉）</span>
+      </label>
+      <button class="btn-act primary" id="gen">生成</button>
+    </div>
+
+    <div class="bulk">
+      <button class="btn-act" id="copy-all">一键复制全部</button>
+    </div>
+
+    <div class="list" id="list"></div>
+
+    <div class="paste">
+      <label for="paste">可粘贴结果（换行分隔，便于整段复制）</label>
+      <textarea id="paste" readonly placeholder="点击「生成」后，这里会显示所有 UUID（换行分隔），便于整段复制粘贴"></textarea>
+    </div>
+
+    <footer>tanrunzhi.github.io · UUID 生成器</footer>
+  </main>
+
+  <div class="toast" id="toast">复制成功</div>
+
+<script>
+  function genUUID(){
+    const b = new Uint8Array(16);
+    crypto.getRandomValues(b);
+    b[6] = (b[6] & 0x0f) | 0x40;
+    b[8] = (b[8] & 0x3f) | 0x80;
+    const h = [...b].map(x => x.toString(16).padStart(2, '0'));
+    return h[0]+h[1]+h[2]+h[3] + '-' +
+           h[4]+h[5] + '-' +
+           h[6]+h[7] + '-' +
+           h[8]+h[9] + '-' +
+           h[10]+h[11]+h[12]+h[13]+h[14]+h[15];
+  }
+
+  function copyText(text){
+    if(navigator.clipboard && window.isSecureContext){
+      return navigator.clipboard.writeText(text);
+    }
+    return new Promise((resolve, reject) => {
+      const ta = document.createElement('textarea');
+      ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.focus(); ta.select();
+      try { document.execCommand('copy'); resolve(); }
+      catch(e){ reject(e); }
+      finally { document.body.removeChild(ta); }
+    });
+  }
+
+  const $ = id => document.getElementById(id);
+  let toastTimer = null;
+  function toast(msg){
+    const t = $('toast');
+    t.textContent = msg || '复制成功';
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 1300);
+  }
+
+  function generate(){
+    let n = parseInt($('count').value, 10);
+    if(isNaN(n) || n < 1) n = 1;
+    if(n > 1000) n = 1000;
+    $('count').value = n;
+    const nodash = $('nodash').checked;
+    const list = [];
+    for(let i = 0; i < n; i++){
+      let u = genUUID();
+      if(nodash) u = u.replace(/-/g, '');
+      list.push(u);
+    }
+    render(list);
+  }
+
+  function render(list){
+    const box = $('list');
+    box.innerHTML = '';
+    if(!list.length){ box.innerHTML = '<p class="empty">暂无内容</p>'; $('paste').value=''; return; }
+    list.forEach(u => {
+      const row = document.createElement('div');
+      row.className = 'row';
+      const span = document.createElement('span');
+      span.className = 'uuid';
+      span.textContent = u;
+      const btn = document.createElement('button');
+      btn.className = 'copy';
+      btn.textContent = '复制';
+      btn.onclick = () => {
+        copyText(u).then(() => {
+          toast('复制成功');
+          span.classList.add('copied');
+          btn.classList.add('done');
+          btn.textContent = '已复制';
+          setTimeout(() => { btn.textContent = '复制'; btn.classList.remove('done'); }, 1200);
+        }).catch(() => toast('复制失败'));
+      };
+      row.appendChild(span);
+      row.appendChild(btn);
+      box.appendChild(row);
+    });
+    $('paste').value = list.join('\n');
+  }
+
+  $('gen').onclick = generate;
+  $('copy-all').onclick = () => {
+    const text = $('paste').value;
+    if(!text){ toast('请先生成'); return; }
+    copyText(text).then(() => {
+      toast('已复制全部 ' + text.split('\n').length + ' 个 UUID');
+      document.querySelectorAll('.row .uuid').forEach(s => s.classList.add('copied'));
+    }).catch(() => toast('复制失败'));
+  };
+
+  generate();
+</script>
+<script src="../assets/snippets.js"></script>
+<script src="../assets/localdb-panel.js"></script>
+</body>
+</html>

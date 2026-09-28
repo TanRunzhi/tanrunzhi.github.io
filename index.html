@@ -70,12 +70,49 @@
     line-height:1.8;
     font-size:15px;
   }
+  .search{
+    margin-top:24px;
+    position:relative;
+  }
+  .search input{
+    width:100%;
+    font:inherit;
+    font-size:15px;
+    padding:13px 18px 13px 44px;
+    border:1px solid var(--line);
+    border-radius:14px;
+    background:#fff;
+    color:var(--txt);
+    box-shadow:0 1px 2px rgba(15,23,42,.04);
+    outline:none;
+    transition:border-color .2s, box-shadow .2s;
+  }
+  .search input:focus{
+    border-color:rgba(37,99,235,.5);
+    box-shadow:0 0 0 4px rgba(37,99,235,.12);
+  }
+  .search::before{
+    content:"🔍";
+    position:absolute;
+    left:16px;
+    top:50%;
+    transform:translateY(-50%);
+    font-size:16px;
+    opacity:.6;
+  }
   .grid{
     display:grid;
     grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
     gap:14px;
     margin-top:28px;
   }
+  .utils{
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+    margin-top:14px;
+  }
+  .utils .btn{ width:100%; }
   a.btn{
     display:flex;
     flex-direction:column;
@@ -109,6 +146,60 @@
     background:linear-gradient(92deg,#dbeaff,#d2f3ff);
     box-shadow:0 14px 28px -12px rgba(37,99,235,.5);
   }
+  .empty{
+    grid-column:1/-1;
+    color:var(--sub);
+    font-size:14px;
+    text-align:center;
+    padding:24px 0;
+  }
+  .sync{
+    margin-top:34px;
+    border-top:1px solid var(--line);
+    padding-top:26px;
+  }
+  .sync h2{font-size:18px;color:var(--txt)}
+  .sync-toggle{
+    display:flex; align-items:center; justify-content:space-between; width:100%;
+    font:inherit; font-size:16px; font-weight:600; color:var(--txt);
+    cursor:pointer; border:none; background:none; padding:0;
+  }
+  .sync-toggle .chev{ transition:transform .2s; font-size:13px; color:var(--sub); }
+  .sync-toggle[aria-expanded="true"] .chev{ transform:rotate(90deg); }
+  .sync-body{ margin-top:18px; }
+  .sync-note{
+    margin-top:10px;font-size:13px;line-height:1.7;color:#1d4ed8;
+    background:rgba(37,99,235,.06);border:1px solid rgba(37,99,235,.2);
+    border-radius:12px;padding:12px 14px;
+  }
+  .sync-box{
+    margin-top:18px;display:grid;grid-template-columns:1fr 1fr;gap:18px;
+  }
+  @media(max-width:640px){ .sync-box{grid-template-columns:1fr} }
+  .sync-col{display:flex;flex-direction:column;gap:10px}
+  .sync-col h3{font-size:14px;color:var(--sub);font-weight:600}
+  .sync-actions{display:flex;flex-wrap:wrap;gap:8px}
+  .btn-act{
+    font:inherit;font-size:13px;cursor:pointer;border-radius:10px;padding:9px 16px;
+    border:1px solid var(--line);background:#fff;color:var(--txt);
+    box-shadow:0 1px 2px rgba(15,23,42,.05);transition:.2s;
+  }
+  .btn-act:hover{border-color:rgba(37,99,235,.35);transform:translateY(-1px)}
+  .btn-act.primary{
+    border-color:rgba(37,99,235,.3);
+    background:linear-gradient(92deg,#e8f1ff,#e0f7ff);color:#1d4ed8;font-weight:600;
+    box-shadow:0 6px 16px -10px rgba(37,99,235,.45);
+  }
+  .sync textarea{
+    width:100%;min-height:120px;resize:vertical;
+    font:inherit;font-size:12px;font-family:ui-monospace,Consolas,monospace;
+    color:#334155;background:#f8fafc;border:1px solid var(--line);border-radius:12px;padding:12px 14px;outline:none;
+  }
+  .sync textarea:focus{border-color:rgba(37,99,235,.5)}
+  .sync-tip{
+    margin-top:14px;font-size:13px;color:#16a34a;font-weight:600;opacity:0;transition:.2s;
+  }
+  .sync-tip.show{opacity:1}
   footer{
     margin-top:28px;
     font-size:12px;
@@ -122,18 +213,221 @@
     <span class="tag">Home · 路由导航</span>
     <h1>主页 / 功能入口</h1>
     <p class="desc">
-      这是项目的主路由页，集成了各个功能模块的入口。点击下方按钮即可跳转到对应页面。
+      这是项目的主路由页，集成了各个功能模块的入口。点击下方按钮即可跳转到对应页面，也可在搜索框中按名称或功能描述快速查找。
     </p>
 
-    <nav class="grid">
-      <a class="btn primary" href="demo/demo.html">
-        <span class="ico">🧪</span>
-        <span class="name">demo测试</span>
-        <span class="hint">测试页</span>
-      </a>
-    </nav>
+    <div class="search">
+      <input id="search" type="search" placeholder="搜索入口或功能，如 base64、加解密、AES…" autocomplete="off">
+    </div>
+
+    <nav class="grid" id="grid"></nav>
+    <nav class="utils" id="utils"></nav>
+
+    <section class="sync">
+      <button class="sync-toggle" id="sync-toggle" aria-expanded="false">
+        <span>⚙️ 配置同步（导入 / 导出）</span>
+        <span class="chev">▸</span>
+      </button>
+      <div class="sync-body" id="sync-body" hidden>
+        <p class="sync-note">
+          🔒 导出本机 localStorage 的全部配置（加解密历史、常用字符串、抽屉状态等），可在另一台电脑导入以同步。
+          数据仅存于本地浏览器，不会上传服务器。
+        </p>
+        <div class="sync-box">
+          <div class="sync-col">
+            <h3>导出</h3>
+            <div class="sync-actions">
+              <button class="btn-act" id="exp-file">导出为文件</button>
+              <button class="btn-act" id="exp-copy">复制导出文本</button>
+            </div>
+            <textarea id="exp-text" readonly placeholder="本机 localStorage 配置（只读）"></textarea>
+          </div>
+          <div class="sync-col">
+            <h3>导入</h3>
+            <div class="sync-actions">
+              <button class="btn-act" id="imp-file-btn">从文件导入</button>
+              <input type="file" id="imp-file" accept="application/json,.json" hidden>
+              <button class="btn-act primary" id="imp-text">导入文本</button>
+            </div>
+            <textarea id="imp-textarea" placeholder="将导出的 JSON 字符串粘贴到这里，然后点「导入文本」"></textarea>
+          </div>
+        </div>
+        <p class="sync-tip" id="sync-tip"></p>
+      </div>
+    </section>
 
     <footer>tanrunzhi.github.io · 主页路由导航</footer>
   </main>
+
+<script>
+  const ENTRIES = [
+    {
+      name:'加解密',
+      hint:'Base64 / AES / SHA1 / MD5',
+      href:'crypto/crypto.html',
+      ico:'🔐',
+      primary:false,
+      kw:'加解密 加密 解密 编码 解码 base64 aes sha1 md5 哈希 hash 对称加密 散列 摘要'
+    },
+    {
+      name:'本地数据',
+      hint:'常用字符串 / 片段',
+      href:'data/localdb.html',
+      ico:'🗃️',
+      primary:false,
+      group:'util',
+      kw:'本地数据 常用字符串 片段 收藏 数据库 录入 拼接 粘贴 文本 收藏夹'
+    },
+    {
+      name:'UUID',
+      hint:'唯一标识生成器',
+      href:'uuid/uuid.html',
+      ico:'🆔',
+      primary:false,
+      kw:'uuid 唯一标识 通用唯一识别码 随机 id guid 生成 标识'
+    }
+  ];
+
+  const grid = document.getElementById('grid');
+  const utilsEl = document.getElementById('utils');
+  const searchInput = document.getElementById('search');
+
+  function makeBtn(e){
+    const a = document.createElement('a');
+    a.className = 'btn' + (e.primary ? ' primary' : '');
+    a.href = e.href;
+    a.innerHTML =
+      `<span class="ico">${e.ico}</span>` +
+      `<span class="name">${e.name}</span>` +
+      `<span class="hint">${e.hint}</span>`;
+    return a;
+  }
+
+  function render(list){
+    const modules = list.filter(e => e.group !== 'util');
+    const utils = list.filter(e => e.group === 'util');
+    grid.innerHTML = '';
+    utilsEl.innerHTML = '';
+    if(!modules.length && !utils.length){
+      grid.innerHTML = '<p class="empty">未找到匹配的入口，换个关键词试试～</p>';
+      return;
+    }
+    modules.forEach(e => grid.appendChild(makeBtn(e)));
+    utils.forEach(e => utilsEl.appendChild(makeBtn(e)));
+  }
+
+  function filter(q){
+    q = q.trim().toLowerCase();
+    const list = q
+      ? ENTRIES.filter(e => (e.name + ' ' + e.hint + ' ' + e.kw).toLowerCase().includes(q))
+      : ENTRIES;
+    render(list);
+  }
+
+  searchInput.addEventListener('input', e => filter(e.target.value));
+  render(ENTRIES);
+</script>
+<script src="assets/snippets.js"></script>
+<script src="assets/localdb-panel.js"></script>
+<script>
+  (function () {
+    const $ = id => document.getElementById(id);
+
+    function gatherConfig() {
+      const obj = {};
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        obj[k] = localStorage.getItem(k);
+      }
+      return obj;
+    }
+    function exportConfig() { return JSON.stringify(gatherConfig(), null, 2); }
+
+    function copyText(text) {
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).catch(() => fallbackCopy(text));
+      } else { fallbackCopy(text); }
+    }
+    function fallbackCopy(text) {
+      const ta = document.createElement('textarea');
+      ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); } catch (e) {}
+      document.body.removeChild(ta);
+    }
+    function tip(msg) {
+      const t = $('sync-tip');
+      t.textContent = msg;
+      t.classList.add('show');
+      clearTimeout(t._t);
+      t._t = setTimeout(() => t.classList.remove('show'), 2200);
+    }
+    function applyConfig(txt) {
+      let obj;
+      try { obj = JSON.parse(txt); }
+      catch (e) { tip('导入失败：JSON 格式不正确'); return; }
+      if (typeof obj !== 'object' || obj === null || Array.isArray(obj)) {
+        tip('导入失败：不是有效的配置对象'); return;
+      }
+      for (const k in obj) {
+        try { localStorage.setItem(k, obj[k]); } catch (e) {}
+      }
+      tip('导入成功，正在应用…');
+      setTimeout(() => location.reload(), 600);
+    }
+
+    // 导出文本框默认显示本机 localStorage 内容
+    function refreshExport() { $('exp-text').value = exportConfig(); }
+    refreshExport();
+
+    // 折叠切换
+    const syncBody = $('sync-body');
+    const syncToggle = $('sync-toggle');
+    syncToggle.onclick = () => {
+      if (syncBody.hasAttribute('hidden')) {
+        syncBody.removeAttribute('hidden');
+        syncToggle.setAttribute('aria-expanded', 'true');
+        refreshExport();
+      } else {
+        syncBody.setAttribute('hidden', '');
+        syncToggle.setAttribute('aria-expanded', 'false');
+      }
+    };
+
+    $('exp-file').onclick = () => {
+      const data = exportConfig();
+      $('exp-text').value = data;
+      const blob = new Blob([data], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'tanrunzhi-config-' + new Date().toISOString().slice(0, 10) + '.json';
+      a.click();
+      URL.revokeObjectURL(a.href);
+      tip('已导出配置文件');
+    };
+    $('exp-copy').onclick = () => {
+      refreshExport();
+      copyText($('exp-text').value);
+      tip('导出文本已复制到剪贴板');
+    };
+    $('imp-file-btn').onclick = () => $('imp-file').click();
+    $('imp-file').onchange = e => {
+      const f = e.target.files[0];
+      if (!f) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        $('imp-textarea').value = reader.result;
+        tip('已读取文件，点「导入文本」应用');
+      };
+      reader.readAsText(f);
+      e.target.value = '';
+    };
+    $('imp-text').onclick = () => {
+      const txt = $('imp-textarea').value.trim();
+      if (!txt) { tip('请先粘贴或选择要导入的 JSON'); return; }
+      applyConfig(txt);
+    };
+  })();
+</script>
 </body>
 </html>

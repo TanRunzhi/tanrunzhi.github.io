@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>本地数据 · 常用字符串</title>
+<style>
+  :root{
+    --brand:#2563eb;
+    --brand-2:#38bdf8;
+    --bg:#f5f7fb;
+    --card:#ffffff;
+    --line:#e5e9f2;
+    --txt:#1e293b;
+    --sub:#64748b;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    min-height:100vh;
+    font-family:"Segoe UI","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+    color:var(--txt);
+    background:
+      radial-gradient(1000px 600px at 10% -10%, rgba(59,130,246,.14) 0%, transparent 60%),
+      radial-gradient(900px 500px at 100% 0%, rgba(56,189,248,.12) 0%, transparent 55%),
+      var(--bg);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+  }
+  .wrap{
+    width:min(760px,100%);
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:24px;
+    padding:40px 36px;
+    box-shadow:
+      0 1px 2px rgba(15,23,42,.04),
+      0 24px 60px -24px rgba(15,23,42,.18);
+    animation:rise .6s ease both;
+  }
+  @keyframes rise{
+    from{opacity:0;transform:translateY(18px)}
+    to{opacity:1;transform:none}
+  }
+  .tag{
+    display:inline-block;
+    font-size:12px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:#2563eb;
+    border:1px solid rgba(37,99,235,.25);
+    background:rgba(37,99,235,.07);
+    padding:5px 12px;
+    border-radius:999px;
+    margin-bottom:18px;
+  }
+  h1{
+    font-size:clamp(24px,5vw,34px);
+    line-height:1.2;
+    background:linear-gradient(92deg,#0f172a 0%,var(--brand) 65%,var(--brand-2) 100%);
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+    word-break:break-word;
+  }
+  p.desc{
+    margin-top:12px;
+    color:var(--sub);
+    line-height:1.8;
+    font-size:15px;
+  }
+  .note{
+    margin-top:20px;
+    font-size:13px;
+    line-height:1.7;
+    color:#1d4ed8;
+    background:rgba(37,99,235,.06);
+    border:1px solid rgba(37,99,235,.2);
+    border-radius:12px;
+    padding:12px 14px;
+  }
+  .form{
+    margin-top:22px;
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:16px;
+    background:#f8fafc;
+  }
+  label{
+    display:block;
+    font-size:13px;
+    color:var(--sub);
+    margin:0 0 6px;
+  }
+  input[type=text], textarea{
+    width:100%;
+    font:inherit;
+    font-size:14px;
+    color:var(--txt);
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:11px 14px;
+    outline:none;
+    transition:border-color .2s, box-shadow .2s;
+  }
+  textarea{min-height:80px;resize:vertical;font-family:ui-monospace,Consolas,monospace}
+  input[type=text]:focus, textarea:focus{
+    border-color:rgba(37,99,235,.5);
+    box-shadow:0 0 0 4px rgba(37,99,235,.12);
+  }
+  .form .row{margin-top:12px}
+  .actions{display:flex;gap:10px;margin-top:14px}
+  .btn-act{
+    font:inherit;font-size:14px;cursor:pointer;
+    border-radius:10px;padding:10px 20px;
+    border:1px solid var(--line);background:#fff;color:var(--txt);
+    box-shadow:0 1px 2px rgba(15,23,42,.05);transition:.2s;
+  }
+  .btn-act:hover{border-color:rgba(37,99,235,.35);transform:translateY(-1px)}
+  .btn-act.primary{
+    border-color:rgba(37,99,235,.3);
+    background:linear-gradient(92deg,#e8f1ff,#e0f7ff);
+    color:#1d4ed8;font-weight:600;
+    box-shadow:0 6px 16px -10px rgba(37,99,235,.45);
+  }
+  .records{margin-top:26px;display:flex;flex-direction:column;gap:12px}
+  .rec{
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:14px 16px;
+    background:#fff;
+    box-shadow:0 1px 2px rgba(15,23,42,.04);
+  }
+  .rec .top{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+  }
+  .rec .name{
+    font-weight:600;font-size:14px;
+    display:flex;align-items:center;gap:8px;
+  }
+  .rec .badge{
+    font-size:11px;color:#64748b;
+    background:#f1f5f9;border:1px solid var(--line);
+    border-radius:999px;padding:2px 10px;
+  }
+  .rec .ops{display:flex;gap:6px}
+  .rec .ops button{
+    font:inherit;font-size:12px;cursor:pointer;
+    border:1px solid var(--line);background:#fff;color:var(--sub);
+    border-radius:8px;padding:5px 12px;transition:.2s;
+  }
+  .rec .ops button:hover{border-color:rgba(37,99,235,.4);color:#1d4ed8}
+  .rec .ops button.del:hover{border-color:#ef4444;color:#ef4444}
+  .rec .val{
+    margin-top:10px;
+    font-family:ui-monospace,Consolas,monospace;
+    font-size:13px;color:#334155;
+    white-space:pre-wrap;word-break:break-all;
+    background:#f8fafc;border-radius:10px;padding:10px 12px;
+    max-height:160px;overflow:auto;
+  }
+  .empty{margin-top:14px;color:var(--sub);font-size:13px}
+  footer{margin-top:28px;font-size:12px;color:#94a3b8;text-align:center}
+  .back{
+    display:inline-block;margin-bottom:16px;font-size:13px;color:#2563eb;
+    text-decoration:none;border:1px solid rgba(37,99,235,.25);
+    background:rgba(37,99,235,.06);padding:6px 14px;border-radius:999px;transition:.2s;
+  }
+  .back:hover{background:rgba(37,99,235,.12)}
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <a class="back" href="../index.html">← 返回主页</a>
+    <span class="tag">Local Data</span>
+    <h1>本地数据 · 常用字符串</h1>
+    <p class="desc">保存你常用的文本片段，在加解密等功能页可一键拼接粘贴，提升效率。</p>
+
+    <div class="note">
+      🔒 说明：这些字符串仅保存在当前浏览器的 localStorage 中，<b>不会上传到任何服务器</b>。
+      清除浏览器数据或更换设备后内容将无法查看，请按需自行备份重要内容。
+    </div>
+
+    <div class="form">
+      <label id="form-title">名称（可选）</label>
+      <input type="text" id="f-name" placeholder="如：API前缀、测试账号…">
+      <div class="row">
+        <label>内容</label>
+        <textarea id="f-value" placeholder="输入要保存的常用字符串…"></textarea>
+      </div>
+      <div class="actions">
+        <button class="btn-act primary" id="f-save">添加</button>
+        <button class="btn-act" id="f-cancel" style="display:none">取消编辑</button>
+      </div>
+    </div>
+
+    <section class="records" id="records"></section>
+
+    <footer>tanrunzhi.github.io · 本地数据</footer>
+  </main>
+
+<script src="../assets/snippets.js"></script>
+<script>
+  const $ = id => document.getElementById(id);
+  let editingId = null;
+
+  function render(){
+    const list = window.Snippets.load();
+    const box = $('records');
+    box.innerHTML = '';
+    if(!list.length){ box.innerHTML = '<p class="empty">暂无保存的常用字符串，在上方添加一条吧～</p>'; return; }
+    list.forEach(s => {
+      const div = document.createElement('div');
+      div.className = 'rec';
+      div.innerHTML =
+        `<div class="top"><span class="name">${window.Snippets.esc(s.name || '（未命名）')}` +
+        `<span class="badge">${new Date(s.t).toLocaleString('zh-CN',{hour12:false})}</span></span>` +
+        `<span class="ops">` +
+        `<button class="copy" data-id="${s.id}">复制</button>` +
+        `<button class="edit" data-id="${s.id}">编辑</button>` +
+        `<button class="del" data-id="${s.id}">删除</button></span></div>` +
+        `<div class="val">${window.Snippets.esc(s.value)}</div>`;
+      box.appendChild(div);
+    });
+
+    box.querySelectorAll('.copy').forEach(b => b.onclick = () => {
+      const s = window.Snippets.load().find(x => x.id === b.dataset.id);
+      if(s && navigator.clipboard){ navigator.clipboard.writeText(s.value).catch(()=>{}); }
+    });
+    box.querySelectorAll('.edit').forEach(b => b.onclick = () => {
+      const s = window.Snippets.load().find(x => x.id === b.dataset.id);
+      if(!s) return;
+      editingId = s.id;
+      $('f-name').value = s.name;
+      $('f-value').value = s.value;
+      $('form-title').textContent = '编辑名称（可选）';
+      $('f-save').textContent = '保存修改';
+      $('f-cancel').style.display = '';
+      $('f-name').focus();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+    box.querySelectorAll('.del').forEach(b => b.onclick = () => {
+      if(confirm('确定删除该条常用字符串？')){ window.Snippets.remove(b.dataset.id); render(); }
+    });
+  }
+
+  $('f-save').onclick = () => {
+    const name = $('f-name').value.trim();
+    const value = $('f-value').value;
+    if(!value){ alert('内容不能为空'); return; }
+    if(editingId){
+      window.Snippets.update(editingId, name, value);
+      editingId = null;
+      $('form-title').textContent = '名称（可选）';
+      $('f-save').textContent = '添加';
+      $('f-cancel').style.display = 'none';
+    } else {
+      window.Snippets.add(name, value);
+    }
+    $('f-name').value = '';
+    $('f-value').value = '';
+    render();
+  };
+  $('f-cancel').onclick = () => {
+    editingId = null;
+    $('f-name').value = '';
+    $('f-value').value = '';
+    $('form-title').textContent = '名称（可选）';
+    $('f-save').textContent = '添加';
+    $('f-cancel').style.display = 'none';
+  };
+
+  render();
+</script>
+</body>
+</html>
