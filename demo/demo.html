@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>tan___腾讯edge测试</title>
+<style>
+  :root{
+    --brand:#2563eb;
+    --brand-2:#38bdf8;
+    --bg:#f5f7fb;
+    --card:#ffffff;
+    --line:#e5e9f2;
+    --txt:#1e293b;
+    --sub:#64748b;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    min-height:100vh;
+    font-family:"Segoe UI","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+    color:var(--txt);
+    background:
+      radial-gradient(1000px 600px at 10% -10%, rgba(59,130,246,.14) 0%, transparent 60%),
+      radial-gradient(900px 500px at 100% 0%, rgba(56,189,248,.12) 0%, transparent 55%),
+      var(--bg);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+  }
+  .wrap{
+    width:min(720px,100%);
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:24px;
+    padding:40px 36px;
+    box-shadow:
+      0 1px 2px rgba(15,23,42,.04),
+      0 24px 60px -24px rgba(15,23,42,.18);
+    animation:rise .6s ease both;
+  }
+  @keyframes rise{
+    from{opacity:0;transform:translateY(18px)}
+    to{opacity:1;transform:none}
+  }
+  .tag{
+    display:inline-block;
+    font-size:12px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:#2563eb;
+    border:1px solid rgba(37,99,235,.25);
+    background:rgba(37,99,235,.07);
+    padding:5px 12px;
+    border-radius:999px;
+    margin-bottom:18px;
+  }
+  h1{
+    font-size:clamp(26px,5vw,38px);
+    line-height:1.2;
+    background:linear-gradient(92deg,#0f172a 0%,var(--brand) 65%,var(--brand-2) 100%);
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+    word-break:break-word;
+  }
+  h1 .mono{
+    font-family:ui-monospace,Consolas,"Courier New",monospace;
+  }
+  p.desc{
+    margin-top:12px;
+    color:var(--sub);
+    line-height:1.8;
+    font-size:15px;
+  }
+  .meta{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+    gap:12px;
+    margin-top:26px;
+  }
+  .item{
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:14px 16px;
+    background:#f8fafc;
+  }
+  .item .k{font-size:12px;color:var(--sub);letter-spacing:.04em}
+  .item .v{
+    margin-top:6px;
+    font-family:ui-monospace,Consolas,monospace;
+    font-size:14px;
+    color:#334155;
+    word-break:break-all;
+  }
+  .btns{display:flex;flex-wrap:wrap;gap:12px;margin-top:28px}
+  button{
+    font:inherit;
+    font-size:14px;
+    cursor:pointer;
+    border-radius:10px;
+    padding:11px 20px;
+    border:1px solid var(--line);
+    background:#fff;
+    color:var(--txt);
+    box-shadow:0 1px 2px rgba(15,23,42,.05);
+    transition:transform .2s, box-shadow .2s, border-color .2s;
+  }
+  button:hover{
+    transform:translateY(-1px);
+    border-color:rgba(37,99,235,.35);
+    box-shadow:0 8px 20px -10px rgba(37,99,235,.3);
+  }
+  button.primary{
+    border-color:rgba(37,99,235,.3);
+    background:linear-gradient(92deg,#e8f1ff,#e0f7ff);
+    color:#1d4ed8;
+    font-weight:600;
+    box-shadow:0 8px 20px -12px rgba(37,99,235,.4);
+  }
+  button.primary:hover{
+    background:linear-gradient(92deg,#dbeaff,#d2f3ff);
+    box-shadow:0 14px 28px -12px rgba(37,99,235,.5);
+  }
+  .log{
+    margin-top:22px;
+    border:1px dashed #cbd5e1;
+    border-radius:12px;
+    padding:12px 14px;
+    font-family:ui-monospace,Consolas,monospace;
+    font-size:13px;
+    color:#0f766e;
+    background:#f8fafc;
+    min-height:44px;
+    white-space:pre-wrap;
+    word-break:break-all;
+  }
+  footer{
+    margin-top:24px;
+    font-size:12px;
+    color:#94a3b8;
+    text-align:center;
+  }
+  .back{
+    display:inline-block;
+    margin-bottom:16px;
+    font-size:13px;
+    color:#2563eb;
+    text-decoration:none;
+    border:1px solid rgba(37,99,235,.25);
+    background:rgba(37,99,235,.06);
+    padding:6px 14px;
+    border-radius:999px;
+    transition:.2s;
+  }
+  .back:hover{background:rgba(37,99,235,.12)}
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <a class="back" href="../index.html">← 返回主页</a>
+    <span class="tag">Demo Page</span>
+    <h1><span class="mono"></span>html测试</h1>
+    <p class="desc">
+      这是一个用于测试的静态 HTML 示例页面，包含基础样式、按钮交互与运行环境信息检测。
+      推荐使用 Microsoft Edge 浏览器打开查看效果。
+    </p>
+
+    <section class="meta">
+      <div class="item">
+        <div class="k">浏览器</div>
+        <div class="v" id="ua-browser">检测中…</div>
+      </div>
+      <div class="item">
+        <div class="k">渲染引擎</div>
+        <div class="v" id="ua-engine">检测中…</div>
+      </div>
+      <div class="item">
+        <div class="k">窗口尺寸</div>
+        <div class="v" id="ua-size">—</div>
+      </div>
+      <div class="item">
+        <div class="k">当前时间</div>
+        <div class="v" id="ua-time">—</div>
+      </div>
+    </section>
+
+    <div class="btns">
+      <button class="primary" id="btn-hello">点我测试</button>
+      <button id="btn-info">输出环境信息</button>
+      <button id="btn-clear">清空日志</button>
+    </div>
+
+    <div class="log" id="log">// 日志输出区</div>
+
+    <footer>tanrunzhi.github.io · 仅用于本地演示</footer>
+  </main>
+
+<script>
+  const $ = id => document.getElementById(id);
+  const logEl = $('log');
+  let count = 0;
+
+  function log(msg){
+    const t = new Date().toLocaleTimeString('zh-CN', {hour12:false});
+    logEl.textContent = `[${t}] ${msg}`;
+  }
+
+  function detectBrowser(){
+    const ua = navigator.userAgent;
+    let browser = '未知浏览器';
+    let engine = '未知';
+
+    if (/Edg\//.test(ua)) browser = 'Microsoft Edge';
+    else if (/OPR\/|Opera/.test(ua)) browser = 'Opera';
+    else if (/Firefox\//.test(ua)) browser = 'Firefox';
+    else if (/Chrome\//.test(ua)) browser = 'Chrome';
+    else if (/Safari\//.test(ua)) browser = 'Safari';
+
+    if (/AppleWebKit/.test(ua)) engine = 'Blink / WebKit';
+    if (/Gecko\//.test(ua) && /Firefox/.test(ua)) engine = 'Gecko';
+
+    const v = (ua.match(/(Edg|Chrome|Firefox|Version)\/([\d.]+)/) || [])[2];
+    return { browser: v ? `${browser} ${v}` : browser, engine };
+  }
+
+  function updateEnv(){
+    const { browser, engine } = detectBrowser();
+    $('ua-browser').textContent = browser;
+    $('ua-engine').textContent = engine;
+    $('ua-size').textContent = `${window.innerWidth} × ${window.innerHeight}`;
+    $('ua-time').textContent = new Date().toLocaleString('zh-CN', {hour12:false});
+  }
+
+  $('btn-hello').addEventListener('click', () => {
+    count++;
+    log(`测试成功 ✅ 这是第 ${count} 次点击 —— tan___腾讯edge测试`);
+  });
+
+  $('btn-info').addEventListener('click', () => {
+    const { browser, engine } = detectBrowser();
+    log(
+      `浏览器: ${browser}\n` +
+      `引擎: ${engine}\n` +
+      `语言: ${navigator.language}\n` +
+      `在线: ${navigator.onLine ? '是' : '否'}\n` +
+      `DPR: ${window.devicePixelRatio}`
+    );
+  });
+
+  $('btn-clear').addEventListener('click', () => {
+    logEl.textContent = '// 日志输出区';
+    count = 0;
+  });
+
+  window.addEventListener('resize', updateEnv);
+  updateEnv();
+  setInterval(updateEnv, 1000);
+</script>
+</body>
+</html>
