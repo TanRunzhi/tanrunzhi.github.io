@@ -257,6 +257,52 @@
     transition:.2s;
   }
   .back:hover{background:rgba(37,99,235,.12)}
+  /* 当前时间显示 */
+  .clock-wrap{
+    position:relative;
+    display:inline-block;
+    margin-top:16px;
+    font:inherit; font-size:13px; color:var(--sub);
+    cursor:pointer; user-select:none;
+  }
+  .clock-wrap #clock{
+    font-family:ui-monospace,Consolas,monospace;
+    color:#1d4ed8; font-weight:600;
+    background:rgba(37,99,235,.06);
+    border:1px solid rgba(37,99,235,.2);
+    border-radius:999px; padding:7px 16px;
+    display:inline-block;
+    transition:.2s;
+  }
+  .clock-wrap:hover #clock{ border-color:rgba(37,99,235,.4); }
+  .clock-menu{
+    position:absolute; top:calc(100% + 8px); left:0; z-index:20;
+    background:#fff; border:1px solid var(--line); border-radius:12px;
+    box-shadow:0 12px 30px -16px rgba(15,23,42,.4);
+    padding:6px; display:none; min-width:210px;
+  }
+  /* 透明桥接区：补上胶囊与菜单间的 8px 间隙，避免鼠标下移时菜单消失 */
+  .clock-menu::before{
+    content:""; position:absolute; left:0; right:0; top:-10px; height:10px;
+  }
+  .clock-wrap:hover .clock-menu,
+  .clock-menu:hover{ display:block; }
+  .clock-menu button{
+    display:block; width:100%; text-align:left; font:inherit; font-size:13px;
+    cursor:pointer; border:none; background:none; color:#334155;
+    padding:8px 10px; border-radius:8px;
+  }
+  .clock-menu button:hover{ background:rgba(37,99,235,.08); color:#1d4ed8; }
+  .clock-menu button.active{ color:#1d4ed8; font-weight:600; background:rgba(37,99,235,.12); }
+  .clock-menu button.active:hover{ background:rgba(37,99,235,.18); }
+  .clock-menu button.active::before{ content:"✓ "; font-weight:700; }
+  .clock-tip{
+    position:absolute; bottom:calc(100% + 8px); left:0; z-index:30;
+    background:#1d4ed8; color:#fff; font-size:12px; font-weight:600;
+    padding:6px 12px; border-radius:8px; white-space:nowrap;
+    opacity:0; transform:translateY(4px); transition:.18s; pointer-events:none;
+  }
+  .clock-tip.show{ opacity:1; transform:translateY(0); }
 </style>
 </head>
 <body>
@@ -266,6 +312,17 @@
     <span class="tag">Crypto Tool</span>
     <h1>加解密工具</h1>
     <p class="desc">支持 Base64、AES、SHA1、MD5 多种算法，可编码、加密与生成摘要。</p>
+
+    <div class="clock-wrap" id="clock-wrap" title="点击复制 yyyy-MM-dd HH:mm:ss；悬停可选择其它复制格式">
+      <span id="clock">--:--:--</span>
+      <div class="clock-tip" id="clock-tip"></div>
+      <div class="clock-menu" id="clock-menu">
+        <button data-fmt="datetime">yyyy-MM-dd HH:mm:ss</button>
+        <button data-fmt="date">yyyy-MM-dd</button>
+        <button data-fmt="ts13">13 位时间戳（毫秒）</button>
+        <button data-fmt="ts10">10 位时间戳（秒）</button>
+      </div>
+    </div>
 
     <div class="note">
       🔒 说明：所有加解密操作均在你的浏览器本地完成，<b>历史记录仅保存在当前浏览器的 localStorage 中，不会上传到任何服务器</b>。
@@ -518,6 +575,88 @@ $('clear-all').onclick=()=>{ if(confirm('确定清空全部历史记录？此操
 
 selectAlgo('base64');
 renderHistory();
+</script>
+<script>
+/* ---------------- 当前时间显示 / 复制 ---------------- */
+(function () {
+  const pad = n => String(n).padStart(2, '0');
+  function fmtDateTime(d) {
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' +
+           pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+  }
+  function fmtDate(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+
+  const clockEl = document.getElementById('clock');
+  const tipEl = document.getElementById('clock-tip');
+  const menu = document.getElementById('clock-menu');
+
+  function tick() { clockEl.textContent = fmtDateTime(new Date()); }
+  tick();
+  setInterval(tick, 1000);
+
+  function copyText(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).catch(() => fallbackCopy(text));
+    } else { fallbackCopy(text); }
+  }
+  function fallbackCopy(text) {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta);
+  }
+  const LABEL = {
+    datetime: 'yyyy-MM-dd HH:mm:ss',
+    date: 'yyyy-MM-dd',
+    ts13: '13 位时间戳（毫秒）',
+    ts10: '10 位时间戳（秒）'
+  };
+  const K_FMT = 'crypto_clock_fmt';
+  let lastFmt = localStorage.getItem(K_FMT) || 'datetime';
+  const clockWrapEl = document.getElementById('clock-wrap');
+  let tipT;
+  function tip(msg) {
+    tipEl.textContent = '已复制：' + msg;
+    tipEl.classList.add('show');
+    clearTimeout(tipT);
+    tipT = setTimeout(() => tipEl.classList.remove('show'), 1300);
+  }
+  function valOf(type) {
+    const d = new Date();
+    if (type === 'date') return fmtDate(d);
+    if (type === 'ts13') return String(d.getTime());
+    if (type === 'ts10') return String(Math.floor(d.getTime() / 1000));
+    return fmtDateTime(d);
+  }
+
+  // 高亮当前复制形式（菜单中打勾 + 变色），并同步胶囊提示
+  function markActive() {
+    menu.querySelectorAll('button').forEach(b => {
+      b.classList.toggle('active', b.dataset.fmt === lastFmt);
+    });
+    clockWrapEl.title = '点击复制：' + (LABEL[lastFmt] || 'yyyy-MM-dd HH:mm:ss') + '；悬停可选择其它复制格式';
+  }
+  markActive();
+
+  // 点击时间本身：按上次的复制形式复制
+  clockEl.onclick = () => {
+    copyText(valOf(lastFmt));
+    tip(LABEL[lastFmt] || '');
+  };
+
+  // 悬停弹出的菜单：选择格式复制，并记住该形式（下次点击胶囊沿用）
+  menu.querySelectorAll('button').forEach(b => {
+    b.onclick = e => {
+      e.stopPropagation();
+      copyText(valOf(b.dataset.fmt));
+      tip(LABEL[b.dataset.fmt] || '');
+      lastFmt = b.dataset.fmt;
+      try { localStorage.setItem(K_FMT, lastFmt); } catch (err) {}
+      markActive();
+    };
+  });
+})();
 </script>
 </body>
 </html>

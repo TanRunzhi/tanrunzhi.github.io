@@ -27,7 +27,7 @@
   #ldb-toggle:hover{filter:brightness(.98)}
   /* 若页面提供锚点，则把按钮放到卡片内（非页面级 fixed） */
   .wrap{ position:relative; }   /* 让锚点相对卡片定位，全局生效 */
-  #ldb-toggle-anchor{ position:absolute; top:16px; right:18px; z-index:5; }
+  #ldb-toggle-anchor{ position:absolute; top:16px; right:18px; z-index:5; display:flex; align-items:center; gap:8px; }
   #ldb-toggle-anchor #ldb-toggle{ position:static; top:auto; right:auto; }
   #ldb-drawer{
     position:fixed; top:0; right:0; height:100vh; width:30vw;
@@ -107,6 +107,20 @@
     color:#334155; white-space:pre-wrap; word-break:break-all; max-height:140px; overflow:auto;
   }
   .ldb-empty{ color:#64748b; font-size:13px; margin-top:10px; }
+  /* 使用说明弹窗 */
+  .ldb-help{ position:fixed; inset:0; z-index:80; display:flex; align-items:center; justify-content:center; }
+  .ldb-help-mask{ position:absolute; inset:0; background:rgba(15,23,42,.4); }
+  .ldb-help-card{
+    position:relative; z-index:1; width:min(520px,92vw); max-height:84vh; overflow:auto;
+    background:#fff; border-radius:16px; box-shadow:0 30px 70px -30px rgba(15,23,42,.6); padding:20px 22px;
+  }
+  .ldb-help-head{ display:flex; align-items:center; justify-content:space-between; font-weight:600; font-size:16px; color:#1e293b; }
+  .ldb-help-body{ font-size:13px; line-height:1.75; color:#334155; margin-top:12px; }
+  .ldb-help-body p{ margin:8px 0; }
+  .ldb-help-body table{ width:100%; border-collapse:collapse; margin-top:10px; font-size:12.5px; }
+  .ldb-help-body th, .ldb-help-body td{ border:1px solid #e5e9f2; padding:7px 10px; text-align:left; vertical-align:top; }
+  .ldb-help-body th{ background:#f1f5f9; color:#475569; font-weight:600; }
+  .ldb-help-body code{ font-family:ui-monospace,Consolas,monospace; background:#f1f5f9; border-radius:6px; padding:1px 6px; color:#1d4ed8; }
   /* 抽屉打开时，主内容容器（main.wrap）整体左移避让，宽度跟随 --ldb-w
      此为全局规则，所有使用 <main class="wrap"> 的页面无需各自声明 */
   body.ldb-open .wrap{ margin-right:var(--ldb-w,30vw); transition:margin-right .25s ease; }
@@ -130,6 +144,7 @@
     '<div class="ldb-inner">' +
       '<div class="ldb-head"><span>本地数据 · 常用字符串</span>' +
         '<div class="ldb-head-ops">' +
+          '<button class="btn-act-ldb" id="ldb-help">❔ 使用说明</button>' +
           '<button class="btn-act-ldb primary" id="ldb-add-toggle">➕ 添加</button>' +
           '<button class="ldb-close" id="ldb-close" title="关闭">✕</button>' +
         '</div>' +
@@ -147,6 +162,41 @@
       '<div class="ldb-list" id="ldb-list"></div>' +
     '</div>';
   document.body.appendChild(drawer);
+
+  // 使用说明弹窗
+  const helpBox = document.createElement('div');
+  helpBox.className = 'ldb-help';
+  helpBox.id = 'ldb-help-box';
+  helpBox.style.display = 'none';
+  helpBox.innerHTML =
+    '<div class="ldb-help-mask" id="ldb-help-mask"></div>' +
+    '<div class="ldb-help-card">' +
+      '<div class="ldb-help-head"><span>使用说明</span>' +
+      '<button class="ldb-close" id="ldb-help-close" title="关闭">✕</button></div>' +
+      '<div class="ldb-help-body">' +
+        '<p>「本地数据」用于保存常用字符串（如模板、链接、密钥片段等），<b>仅存于当前浏览器本地，不上传服务器</b>。</p>' +
+        '<p>内容可包含 <b>占位符</b>，复制时会自动替换为当前时间 / 时间戳，方便生成带日期的流水号、日志模板等。</p>' +
+        '<table>' +
+          '<tr><th>占位符</th><th>复制时替换为</th></tr>' +
+          '<tr><td class="ph"><code>{yyyy-MM-dd}</code></td><td>当前日期，如 2026-09-29</td></tr>' +
+          '<tr><td class="ph"><code>{yyyy-MM-dd HH:mm:ss}</code></td><td>当前日期时间，如 2026-09-29 14:03:07</td></tr>' +
+          '<tr><td class="ph"><code>{HH:mm:ss}</code></td><td>当前时间，如 14:03:07</td></tr>' +
+          '<tr><td class="ph"><code>{ts13}</code></td><td>13 位时间戳（毫秒），如 1769652187000</td></tr>' +
+          '<tr><td class="ph"><code>{ts10}</code></td><td>10 位时间戳（秒），如 1769652187</td></tr>' +
+        '</table>' +
+        '<p style="margin-top:10px">也可自由组合单字符：<code>{yyyy}</code> 年、<code>{MM}</code> 月、<code>{dd}</code> 日、<code>{HH}</code> 时、<code>{mm}</code> 分、<code>{ss}</code> 秒。例如 <code>{yyyy}{MM}{dd}</code> 可生成 20260929。</p>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(helpBox);
+
+  const helpBtn = drawer.querySelector('#ldb-help');
+  const helpClose = helpBox.querySelector('#ldb-help-close');
+  const helpMask = helpBox.querySelector('#ldb-help-mask');
+  function openHelp() { helpBox.style.display = 'flex'; }
+  function closeHelp() { helpBox.style.display = 'none'; }
+  helpBtn.onclick = openHelp;
+  helpClose.onclick = closeHelp;
+  helpMask.onclick = closeHelp;
 
   const listEl = drawer.querySelector('#ldb-list');
   const nameEl = drawer.querySelector('#ldb-name');
@@ -175,6 +225,27 @@
       try { document.execCommand('copy'); } catch (e) {}
       document.body.removeChild(ta);
     }
+  }
+
+  // 占位符：复制时把 {yyyy-MM-dd} 等替换为当前时间/时间戳
+  function fillPlaceholders(text) {
+    const now = new Date();
+    const pad = n => String(n).padStart(2, '0');
+    function fmt(s) {
+      return s
+        .replace(/yyyy/g, now.getFullYear())
+        .replace(/MM/g, pad(now.getMonth() + 1))
+        .replace(/dd/g, pad(now.getDate()))
+        .replace(/HH/g, pad(now.getHours()))
+        .replace(/mm/g, pad(now.getMinutes()))
+        .replace(/ss/g, pad(now.getSeconds()));
+    }
+    return String(text).replace(/\{([^}]*)\}/g, (m, inner) => {
+      const key = inner.trim();
+      if (key === 'ts13') return String(now.getTime());
+      if (key === 'ts10') return String(Math.floor(now.getTime() / 1000));
+      return fmt(key);
+    });
   }
 
   function showForm() { formEl.style.display = ''; }
@@ -215,7 +286,7 @@
     listEl.querySelectorAll('.cp').forEach(b => b.onclick = () => {
       const it = S.load().find(x => x.id === b.dataset.id);
       if (!it) return;
-      copyText(it.value);
+      copyText(fillPlaceholders(it.value));
       b.textContent = '已复制';
       setTimeout(() => b.textContent = '复制', 1000);
     });
@@ -257,7 +328,10 @@
   drawer.querySelector('#ldb-close').onclick = closeP;
   // 抽屉打开时按 ESC 关闭
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape' && drawer.classList.contains('open')) closeP();
+    if (e.key === 'Escape') {
+      if (helpBox.style.display !== 'none') { closeHelp(); return; }
+      if (drawer.classList.contains('open')) closeP();
+    }
   });
   addToggleBtn.onclick = () => {
     if (formEl.style.display === 'none') { hideForm(); showForm(); nameEl.focus(); }

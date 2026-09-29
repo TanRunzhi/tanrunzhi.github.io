@@ -113,6 +113,7 @@
     margin-top:14px;
   }
   .utils .btn{ width:100%; }
+  .utils:empty{ display:none; }
   a.btn{
     display:flex;
     flex-direction:column;
@@ -200,6 +201,36 @@
     margin-top:14px;font-size:13px;color:#16a34a;font-weight:600;opacity:0;transition:.2s;
   }
   .sync-tip.show{opacity:1}
+  /* 右上角：GitHub 图标 + 说明按钮 */
+  .home-top-btn{
+    font:inherit; font-size:13px; cursor:pointer; white-space:nowrap;
+    border:1px solid rgba(37,99,235,.3);
+    background:linear-gradient(92deg,#e8f1ff,#e0f7ff);
+    color:#1d4ed8; border-radius:999px; padding:8px 14px;
+    box-shadow:0 6px 16px -10px rgba(37,99,235,.45);
+    text-decoration:none; display:inline-flex; align-items:center; gap:5px;
+  }
+  .home-top-btn:hover{filter:brightness(.98)}
+  .github-link{ width:36px; height:36px; padding:0; justify-content:center; }
+  .github-link svg{ width:18px; height:18px; fill:#1d4ed8; display:block; }
+  /* 使用说明弹窗 */
+  .home-help{ position:fixed; inset:0; z-index:80; display:flex; align-items:center; justify-content:center; }
+  .home-help-mask{ position:absolute; inset:0; background:rgba(15,23,42,.4); }
+  .home-help-card{
+    position:relative; z-index:1; width:min(560px,92vw); max-height:84vh; overflow:auto;
+    background:#fff; border-radius:16px; box-shadow:0 30px 70px -30px rgba(15,23,42,.6); padding:22px 24px;
+  }
+  .home-help-head{ display:flex; align-items:center; justify-content:space-between; font-weight:600; font-size:17px; color:#1e293b; }
+  .home-help-body{ font-size:13.5px; line-height:1.75; color:#334155; margin-top:12px; }
+  .home-help-body p{ margin:8px 0; }
+  .home-help-body h4{ font-size:14px; color:#1d4ed8; margin:16px 0 6px; }
+  .home-help-body ul{ margin:6px 0 6px 18px; }
+  .home-help-body li{ margin:4px 0; }
+  .home-help-body .mod{ border:1px solid var(--line); border-radius:12px; padding:10px 12px; margin-top:8px; }
+  .home-help-body .mod .nm{ font-weight:600; color:#1e293b; }
+  .home-help-body .mod .h{ font-size:12px; color:#64748b; }
+  .home-help-body .mod .d{ margin-top:6px; font-size:12.5px; color:#475569; }
+  .home-help-body code{ font-family:ui-monospace,Consolas,monospace; background:#f1f5f9; border-radius:6px; padding:1px 6px; color:#1d4ed8; }
   footer{
     margin-top:28px;
     font-size:12px;
@@ -210,7 +241,12 @@
 </head>
 <body>
   <main class="wrap">
-    <div id="ldb-toggle-anchor"></div>
+    <div id="ldb-toggle-anchor">
+      <a class="home-top-btn github-link" href="https://github.com/TanRunzhi/tanrunzhi.github.io" target="_blank" rel="noopener" title="在 GitHub 上查看">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg>
+      </a>
+      <button class="home-top-btn" id="home-help">❔ 说明</button>
+    </div>
     <span class="tag">Home · 路由导航</span>
     <h1>主页 / 功能入口</h1>
     <p class="desc">
@@ -268,16 +304,8 @@
       href:'crypto/crypto.html',
       ico:'🔐',
       primary:false,
-      kw:'加解密 加密 解密 编码 解码 base64 aes sha1 md5 哈希 hash 对称加密 散列 摘要'
-    },
-    {
-      name:'本地数据',
-      hint:'常用字符串 / 片段',
-      href:'data/localdb.html',
-      ico:'🗃️',
-      primary:false,
-      group:'util',
-      kw:'本地数据 常用字符串 片段 收藏 数据库 录入 拼接 粘贴 文本 收藏夹'
+      kw:'加解密 加密 解密 编码 解码 base64 aes sha1 md5 哈希 hash 对称加密 散列 摘要',
+      desc:'支持 Base64 编码/解码、AES 对称加密/解密、SHA1 与 MD5 摘要生成。所有运算均在浏览器本地完成，历史记录仅存于当前浏览器，不上传服务器。'
     },
     {
       name:'UUID',
@@ -285,7 +313,8 @@
       href:'uuid/uuid.html',
       ico:'🆔',
       primary:false,
-      kw:'uuid 唯一标识 通用唯一识别码 随机 id guid 生成 标识'
+      kw:'uuid 唯一标识 通用唯一识别码 随机 id guid 生成 标识',
+      desc:'生成符合标准的 UUID（通用唯一识别码），适用于数据库主键、分布式 ID、测试数据等场景，支持批量生成与格式复制。'
     }
   ];
 
@@ -428,6 +457,50 @@
       if (!txt) { tip('请先粘贴或选择要导入的 JSON'); return; }
       applyConfig(txt);
     };
+  })();
+</script>
+<script>
+  /* 主页使用说明弹窗：介绍各模块作用 */
+  (function () {
+    const $ = id => document.getElementById(id);
+    const list = (typeof ENTRIES !== 'undefined') ? ENTRIES : [];
+    const mods = list.map(e =>
+      '<div class="mod">' +
+        '<div class="nm">' + (e.ico || '') + ' ' + e.name + '</div>' +
+        '<div class="h">' + e.hint + '</div>' +
+        '<div class="d">' + (e.desc || '') + '</div>' +
+      '</div>'
+    ).join('');
+
+    const helpBox = document.createElement('div');
+    helpBox.className = 'home-help';
+    helpBox.style.display = 'none';
+    helpBox.innerHTML =
+      '<div class="home-help-mask" id="home-help-mask"></div>' +
+      '<div class="home-help-card">' +
+        '<div class="home-help-head"><span>使用说明</span>' +
+        '<button class="ldb-close" id="home-help-close" title="关闭">✕</button></div>' +
+        '<div class="home-help-body">' +
+          '<p>这是项目的主路由页，聚合了各个功能模块的入口，点击下方卡片即可跳转：</p>' +
+          mods +
+          '<h4>本页附加功能</h4>' +
+          '<ul>' +
+            '<li><b>搜索框</b>：按名称、功能描述或关键词快速筛选下方入口。</li>' +
+            '<li><b>配置同步</b>：导出 / 导入当前浏览器 localStorage 的全部配置（加解密历史、常用字符串、抽屉状态等），用于不同电脑间同步；数据仅存本地、不上传服务器。</li>' +
+            '<li><b>本地数据</b>：右下角抽屉，可保存常用字符串；支持占位符（如 <code>{yyyy-MM-dd}</code>、<code>{ts13}</code>），复制时自动填充当前时间 / 时间戳。</li>' +
+          '</ul>' +
+          '<p style="margin-top:10px;color:#64748b;font-size:12px">项目源码：<a href="https://github.com/TanRunzhi/tanrunzhi.github.io" target="_blank" rel="noopener" style="color:#1d4ed8">github.com/TanRunzhi/tanrunzhi.github.io</a></p>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(helpBox);
+
+    const close = () => helpBox.style.display = 'none';
+    $('home-help').onclick = () => helpBox.style.display = 'flex';
+    helpBox.querySelector('#home-help-close').onclick = close;
+    helpBox.querySelector('#home-help-mask').onclick = close;
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && helpBox.style.display !== 'none') close();
+    });
   })();
 </script>
 </body>
