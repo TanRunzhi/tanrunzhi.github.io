@@ -26,6 +26,8 @@
   }
   #ldb-toggle:hover{filter:brightness(.98)}
   /* 若页面提供锚点，则把按钮放到卡片内（非页面级 fixed） */
+  .wrap{ position:relative; }   /* 让锚点相对卡片定位，全局生效 */
+  #ldb-toggle-anchor{ position:absolute; top:16px; right:18px; z-index:5; }
   #ldb-toggle-anchor #ldb-toggle{ position:static; top:auto; right:auto; }
   #ldb-drawer{
     position:fixed; top:0; right:0; height:100vh; width:30vw;
@@ -105,8 +107,9 @@
     color:#334155; white-space:pre-wrap; word-break:break-all; max-height:140px; overflow:auto;
   }
   .ldb-empty{ color:#64748b; font-size:13px; margin-top:10px; }
-  /* 抽屉打开时，页面主体把内容左移避让（由具体页面声明，避免影响未适配页） */
-  body.ldb-open{ }
+  /* 抽屉打开时，主内容容器（main.wrap）整体左移避让，宽度跟随 --ldb-w
+     此为全局规则，所有使用 <main class="wrap"> 的页面无需各自声明 */
+  body.ldb-open .wrap{ margin-right:var(--ldb-w,30vw); transition:margin-right .25s ease; }
   `;
   const style = document.createElement('style');
   style.textContent = css;
@@ -252,6 +255,10 @@
 
   toggle.onclick = openP;
   drawer.querySelector('#ldb-close').onclick = closeP;
+  // 抽屉打开时按 ESC 关闭
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && drawer.classList.contains('open')) closeP();
+  });
   addToggleBtn.onclick = () => {
     if (formEl.style.display === 'none') { hideForm(); showForm(); nameEl.focus(); }
     else hideForm();

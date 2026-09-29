@@ -44,11 +44,6 @@
   #ldb-toggle-anchor{
     position:absolute; top:16px; right:18px; z-index:5;
   }
-  /* 抽屉打开时，卡片整体左移避让（宽度跟随抽屉实时宽度） */
-  body.ldb-open .wrap{
-    margin-right:var(--ldb-w,30vw);
-    transition:margin-right .25s ease;
-  }
   @keyframes rise{
     from{opacity:0;transform:translateY(18px)}
     to{opacity:1;transform:none}
