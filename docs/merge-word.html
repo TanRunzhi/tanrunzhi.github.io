@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>合并 Word · 文档处理</title>
+<style>
+  :root{
+    --brand:#2563eb;
+    --brand-2:#38bdf8;
+    --bg:#f5f7fb;
+    --card:#ffffff;
+    --line:#e5e9f2;
+    --txt:#1e293b;
+    --sub:#64748b;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    min-height:100vh;
+    font-family:"Segoe UI","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+    color:var(--txt);
+    background:
+      radial-gradient(1000px 600px at 10% -10%, rgba(59,130,246,.14) 0%, transparent 60%),
+      radial-gradient(900px 500px at 100% 0%, rgba(56,189,248,.12) 0%, transparent 55%),
+      var(--bg);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+  }
+  .wrap{
+    width:min(1080px,100%);
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:24px;
+    padding:36px 34px;
+    box-shadow:0 1px 2px rgba(15,23,42,.04), 0 24px 60px -24px rgba(15,23,42,.18);
+    animation:rise .6s ease both;
+  }
+  @keyframes rise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+  .back{display:inline-block;font-size:13px;color:#1d4ed8;text-decoration:none;margin-bottom:14px}
+  .back:hover{text-decoration:underline}
+  .tag{
+    display:inline-block;font-size:12px;letter-spacing:.12em;text-transform:uppercase;
+    color:#2563eb;border:1px solid rgba(37,99,235,.25);background:rgba(37,99,235,.07);
+    padding:5px 12px;border-radius:999px;
+  }
+  h1{
+    font-size:clamp(24px,5vw,34px);margin-top:12px;line-height:1.2;
+    background:linear-gradient(92deg,#0f172a,var(--brand) 65%,var(--brand-2));
+    -webkit-background-clip:text;background-clip:text;color:transparent;word-break:break-word;
+  }
+  p.desc{margin-top:10px;color:var(--sub);line-height:1.8;font-size:14px}
+  .cdn-error{
+    margin-top:20px;background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;
+    border-radius:14px;padding:14px 16px;font-size:13.5px;line-height:1.7;
+  }
+  .drop{
+    display:flex;flex-direction:column;align-items:center;gap:8px;
+    border:2px dashed var(--line);border-radius:18px;padding:30px 20px;cursor:pointer;
+    text-align:center;color:var(--sub);transition:.2s;background:#fbfdff;
+  }
+  .layout{margin-top:24px;display:flex;gap:22px;height:calc(100vh - 210px);min-height:420px}
+  .pane.left{flex:0 0 340px;display:flex;flex-direction:column;gap:16px}
+  .pane.right{flex:1 1 auto;display:flex;flex-direction:column;min-width:0}
+  .list-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .list-title{font-size:14px;font-weight:600;color:var(--txt)}
+  .list-title b{color:#1d4ed8}
+  .list-head .sortrow{margin-top:0}
+  .drop:hover,.drop.over{border-color:rgba(37,99,235,.5);background:#f0f7ff}
+  .drop.disabled{opacity:.5;cursor:not-allowed;pointer-events:none}
+  .drop-ico{font-size:34px}
+  .drop-sub{font-size:12px;opacity:.8}
+  .filelist{list-style:none;flex:1 1 auto;overflow-y:auto;min-height:0;margin-top:14px;display:flex;flex-direction:column;gap:10px;border:1px solid var(--line);border-radius:12px;padding:12px;background:#fbfdff}
+  .fileitem{display:flex;align-items:center;gap:12px;border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:#fff}
+  .fileitem .idx{width:24px;height:24px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;background:linear-gradient(92deg,#e8f1ff,#e0f7ff);color:#1d4ed8;border-radius:8px;font-size:12px;font-weight:700}
+  .fileitem .fname{flex:1;font-size:14px;word-break:break-all}
+  .fileitem .fops{display:flex;gap:6px;flex:0 0 auto}
+  .fileitem .fops button{font:inherit;font-size:13px;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--txt);border-radius:8px;padding:5px 10px;transition:.2s}
+  .fileitem .fops button:hover{border-color:rgba(37,99,235,.4)}
+  .options{display:flex;gap:18px;flex-wrap:wrap;font-size:13.5px;color:var(--txt)}
+  .options label{cursor:pointer;display:flex;align-items:center;gap:6px}
+  .sortrow{margin-top:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:13.5px;color:var(--txt)}
+  .sortrow .slabel{color:var(--sub)}
+  .sortbtn{font:inherit;font-size:13px;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--txt);border-radius:8px;padding:5px 12px;transition:.2s}
+  .sortbtn:hover{border-color:rgba(37,99,235,.4)}
+  .sortbtn:disabled{opacity:.5;cursor:not-allowed}
+  .merge-btn{
+    width:100%;font:inherit;font-size:15px;font-weight:600;cursor:pointer;
+    border:1px solid rgba(37,99,235,.3);background:linear-gradient(92deg,#e8f1ff,#e0f7ff);
+    color:#1d4ed8;border-radius:14px;padding:14px;
+    box-shadow:0 8px 20px -12px rgba(37,99,235,.4);transition:.2s;
+  }
+  .merge-btn:hover:not(:disabled){filter:brightness(.98)}
+  .merge-btn:disabled{opacity:.5;cursor:not-allowed}
+  .status{font-size:13.5px;color:var(--sub)}
+  .status.warn{color:#b45309}
+  .status.err{color:#b91c1c}
+  footer{margin-top:24px;font-size:12px;color:#94a3b8;text-align:center}
+  @media (max-width:780px){
+    .wrap{width:100%}
+    .layout{flex-direction:column;height:auto}
+    .pane.left{flex:0 0 auto}
+    .filelist{max-height:60vh}
+  }
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <a class="back" href="../index.html">← 返回首页</a>
+    <span class="tag">文档处理 · 合并 Word</span>
+    <h1>合并 Word</h1>
+    <p class="desc">在浏览器本地将多份 .docx 按顺序合并为一份，保留文本、段落、表格与图片。文件不会上传服务器。</p>
+
+    <div class="cdn-error" id="cdn-error" hidden>
+      ⚠️ 当前模块依赖的 CDN 资源（JSZip，用于本地解析 Word 文档）加载失败，合并功能暂时不可用。可能原因：网络无法访问 CDN，或该资源被网络环境拦截。请检查网络连接后刷新页面重试。
+    </div>
+
+    <div class="layout">
+      <section class="pane left">
+        <label class="drop" id="drop">
+          <input type="file" id="file" accept=".docx" multiple hidden>
+          <div class="drop-ico">📥</div>
+          <div>点击或拖拽 .docx 文件到此处（可多选）</div>
+          <div class="drop-sub">仅支持 .docx 格式；建议单次合并文档数量适中，避免占用过高内存</div>
+        </label>
+
+        <div class="options" id="options">
+          <label><input type="radio" name="brk" value="page" checked> 文档间插入分页符</label>
+          <label><input type="radio" name="brk" value="none"> 连续拼接（不加分页）</label>
+        </div>
+
+        <button class="merge-btn" id="merge" disabled>合并并下载</button>
+        <div class="status" id="status">请先选择至少 2 个 .docx 文件</div>
+      </section>
+
+      <section class="pane right">
+        <div class="list-head">
+          <span class="list-title">已选文件 <b id="fileCount">0</b></span>
+          <div class="sortrow">
+            <span class="slabel">排序</span>
+            <button type="button" id="sortAsc" class="sortbtn">文件名 ↑ 正序</button>
+            <button type="button" id="sortDesc" class="sortbtn">文件名 ↓ 倒序</button>
+          </div>
+        </div>
+        <ul class="filelist" id="filelist"></ul>
+      </section>
+    </div>
+
+    <footer>tanrunzhi.github.io · 文档处理</footer>
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" onerror="window.__jszipFailed=true"></script>
+  <script>
+  (function () {
+    const $ = id => document.getElementById(id);
+    const fileInput = $('file');
+    const drop = $('drop');
+    const filelist = $('filelist');
+    const mergeBtn = $('merge');
+    const statusEl = $('status');
+
+    let files = [];
+
+    // CDN 加载失败：禁用功能并提示原因
+    if (typeof JSZip === 'undefined' || window.__jszipFailed) {
+      $('cdn-error').hidden = false;
+      mergeBtn.disabled = true;
+      fileInput.disabled = true;
+      drop.classList.add('disabled');
+      const sa = $('sortAsc'), sd = $('sortDesc');
+      if (sa) sa.disabled = true;
+      if (sd) sd.disabled = true;
+      setStatus('因 CDN 资源加载失败，合并功能暂时不可用。', 'err');
+      return;
+    }
+
+    function setStatus(msg, kind) {
+      statusEl.textContent = msg;
+      statusEl.className = 'status' + (kind ? ' ' + kind : '');
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
+    function addFiles(list) {
+      let added = 0, ignored = 0;
+      Array.from(list).forEach(f => {
+        if (!/\.docx$/i.test(f.name)) { ignored++; return; }
+        files.push({ file: f, id: Date.now() + '_' + Math.random() });
+        added++;
+      });
+      if (ignored) setStatus('已忽略 ' + ignored + ' 个非 .docx 文件', 'warn');
+      renderList();
+    }
+
+    function renderList() {
+      const fc = $('fileCount'); if (fc) fc.textContent = files.length;
+      filelist.innerHTML = '';
+      files.forEach((it, idx) => {
+        const li = document.createElement('li');
+        li.className = 'fileitem';
+        li.innerHTML =
+          '<span class="idx">' + (idx + 1) + '</span>' +
+          '<span class="fname">' + escapeHtml(it.file.name) + '</span>' +
+          '<span class="fops">' +
+            (idx > 0 ? '<button type="button" data-act="up" title="上移">↑</button>' : '') +
+            (idx < files.length - 1 ? '<button type="button" data-act="down" title="下移">↓</button>' : '') +
+            '<button type="button" data-act="del" title="删除">✕</button>' +
+          '</span>';
+        const up = li.querySelector('[data-act="up"]');
+        const down = li.querySelector('[data-act="down"]');
+        const del = li.querySelector('[data-act="del"]');
+        if (up) up.onclick = () => { swap(idx, idx - 1); };
+        if (down) down.onclick = () => { swap(idx, idx + 1); };
+        if (del) del.onclick = () => { files.splice(idx, 1); renderList(); };
+        filelist.appendChild(li);
+      });
+      if (files.length < 2) {
+        mergeBtn.disabled = true;
+        if (!files.length) setStatus('请先选择至少 2 个 .docx 文件');
+        else setStatus('已选择 ' + files.length + ' 个文件，至少需要 2 个才能合并', 'warn');
+      } else {
+        mergeBtn.disabled = false;
+        setStatus('已选择 ' + files.length + ' 个文件，点击「合并并下载」');
+      }
+    }
+
+    function swap(a, b) {
+      const t = files[a]; files[a] = files[b]; files[b] = t;
+      renderList();
+    }
+
+    function sortFiles(dir) {
+      if (files.length < 2) return;
+      const cmp = (a, b) => dir === 'asc'
+        ? a.file.name.localeCompare(b.file.name, 'zh-CN')
+        : b.file.name.localeCompare(a.file.name, 'zh-CN');
+      files.sort(cmp);
+      renderList();
+      setStatus('已按文件名' + (dir === 'asc' ? '正序' : '倒序') + '排序，已选择 ' + files.length + ' 个文件');
+    }
+    $('sortAsc').onclick = () => sortFiles('asc');
+    $('sortDesc').onclick = () => sortFiles('desc');
+
+    // 上传交互
+    drop.onclick = () => fileInput.click();
+    fileInput.onchange = e => { addFiles(e.target.files); fileInput.value = ''; };
+    ['dragenter', 'dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
+    ['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
+    drop.addEventListener('drop', e => { if (e.dataTransfer && e.dataTransfer.files) addFiles(e.dataTransfer.files); });
+
+    mergeBtn.onclick = async () => {
+      if (files.length < 2) return;
+      mergeBtn.disabled = true;
+      try {
+        const pageBreak = document.querySelector('input[name="brk"]:checked').value === 'page';
+        setStatus('正在读取并合并文档，请稍候…');
+        const blob = await mergeDocx(files.map(f => f.file), { pageBreak });
+        const name = 'merged-' + new Date().toISOString().slice(0, 10) + '.docx';
+        downloadBlob(blob, name);
+        setStatus('合并完成 ✅ 已生成下载文件：' + name);
+      } catch (err) {
+        console.error(err);
+        setStatus('合并失败：' + (err && err.message ? err.message : err), 'err');
+      } finally {
+        mergeBtn.disabled = files.length < 2;
+      }
+    };
+
+    function downloadBlob(blob, name) {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    }
+
+    /* ---------- 合并核心：JSZip + DOMParser ---------- */
+    const W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+    const R_NS = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+    const CT_NS = 'http://schemas.openxmlformats.org/package/2006/content-types';
+    const REL_NS = 'http://schemas.openxmlformats.org/package/2006/relationships';
+
+    async function mergeDocx(files, { pageBreak }) {
+      const serializer = new XMLSerializer();
+      const parser = new DOMParser();
+
+      const base = await JSZip.loadAsync(files[0]);
+      const baseDocStr = await base.file('word/document.xml').async('string');
+      const baseDoc = parser.parseFromString(baseDocStr, 'application/xml');
+      let mergedBodyXml = getBodyChildrenXml(baseDoc, false);
+
+      const stylesMap = {};
+      const numberingMap = {};
+      if (base.file('word/styles.xml'))
+        collectStyles(parser, await base.file('word/styles.xml').async('string'), stylesMap);
+      if (base.file('word/numbering.xml'))
+        collectNumbering(parser, await base.file('word/numbering.xml').async('string'), numberingMap);
+
+      let relsDoc, maxRid = 0;
+      if (base.file('word/_rels/document.xml.rels')) {
+        relsDoc = parser.parseFromString(await base.file('word/_rels/document.xml.rels').async('string'), 'application/xml');
+        maxRid = getMaxRid(relsDoc);
+      } else {
+        relsDoc = parser.parseFromString('<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"></Relationships>', 'application/xml');
+      }
+
+      const ctStr = await base.file('[Content_Types].xml').async('string');
+      const ctDoc = parser.parseFromString(ctStr, 'application/xml');
+
+      let lastSectPr = '';
+      const lastIndex = files.length - 1;
+
+      for (let i = 1; i < files.length; i++) {
+        const src = await JSZip.loadAsync(files[i]);
+        const docStr = await src.file('word/document.xml').async('string');
+        const doc = parser.parseFromString(docStr, 'application/xml');
+
+        if (i === lastIndex) {
+          const body = doc.getElementsByTagNameNS(W, 'body')[0];
+          const sp = Array.from(body.childNodes).find(n => n.nodeName === 'w:sectPr');
+          if (sp) lastSectPr = serializer.serializeToString(sp);
+        }
+
+        let bodyXml = getBodyChildrenXml(doc, false);
+
+        const srcRidMap = {};
+        if (src.file('word/_rels/document.xml.rels')) {
+          const srels = parser.parseFromString(await src.file('word/_rels/document.xml.rels').async('string'), 'application/xml');
+          const relsNodes = Array.from(srels.getElementsByTagNameNS(REL_NS, 'Relationship'));
+          for (const rel of relsNodes) {
+            const id = rel.getAttribute('Id');
+            const target = rel.getAttribute('Target') || '';
+            const type = rel.getAttribute('Type') || '';
+            if (/media\//i.test(target)) {
+              const mediaName = target.split('/').pop();
+              const newName = 'image_' + i + '_' + mediaName;
+              const mf = src.file('word/' + target.replace(/^\//, '')) || src.file(target.replace(/^\//, ''));
+              if (mf) {
+                const data = await mf.async('uint8array');
+                base.file('word/media/' + newName, data);
+                const newRid = 'rId' + (++maxRid);
+                addRelationship(relsDoc, newRid, type, 'media/' + newName);
+                srcRidMap[id] = newRid;
+                ensureContentType(ctDoc, (newName.split('.').pop() || '').toLowerCase());
+              }
+            }
+          }
+        }
+
+        bodyXml = remapRids(bodyXml, srcRidMap);
+        if (pageBreak && i > 0) mergedBodyXml += '<w:p><w:r><w:br w:type="page"/></w:r></w:p>';
+        mergedBodyXml += bodyXml;
+      }
+      mergedBodyXml += lastSectPr;
+
+      let newDocXml = baseDocStr.replace(/<w:body\b[^>]*>[\s\S]*?<\/w:body>/, '<w:body>' + mergedBodyXml + '</w:body>');
+      newDocXml = ensureDocNamespaces(newDocXml);
+      base.file('word/document.xml', newDocXml);
+
+      if (Object.keys(stylesMap).length) {
+        const sxml = mergeStylesInto(parser, serializer, base, stylesMap);
+        if (sxml) base.file('word/styles.xml', sxml);
+      }
+      if (Object.keys(numberingMap).length) {
+        const nxml = mergeNumberingInto(parser, serializer, base, numberingMap);
+        if (nxml) base.file('word/numbering.xml', nxml);
+      }
+
+      base.file('word/_rels/document.xml.rels', serializer.serializeToString(relsDoc));
+      base.file('[Content_Types].xml', serializer.serializeToString(ctDoc));
+
+      return await base.generateAsync({
+        type: 'blob',
+        mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      });
+    }
+
+    function getBodyChildrenXml(doc, includeSectPr) {
+      const serializer = new XMLSerializer();
+      const body = doc.getElementsByTagNameNS(W, 'body')[0];
+      if (!body) return '';
+      return Array.from(body.childNodes)
+        .filter(n => (n.nodeType === 1 && (includeSectPr || n.nodeName !== 'w:sectPr')) ||
+                     (n.nodeType === 3 && n.textContent.trim()))
+        .map(n => serializer.serializeToString(n))
+        .join('');
+    }
+
+    function collectStyles(parser, xml, map) {
+      const doc = parser.parseFromString(xml, 'application/xml');
+      Array.from(doc.getElementsByTagNameNS(W, 'style')).forEach(el => {
+        const id = el.getAttributeNS(W, 'styleId') || el.getAttribute('w:styleId');
+        if (id && !map[id]) map[id] = new XMLSerializer().serializeToString(el);
+      });
+    }
+
+    function collectNumbering(parser, xml, map) {
+      const doc = parser.parseFromString(xml, 'application/xml');
+      Array.from(doc.getElementsByTagNameNS(W, 'abstractNum')).forEach(el => {
+        const id = el.getAttributeNS(W, 'abstractNumId');
+        if (id != null && !('a' + id in map)) map['a' + id] = new XMLSerializer().serializeToString(el);
+      });
+      Array.from(doc.getElementsByTagNameNS(W, 'num')).forEach(el => {
+        const id = el.getAttributeNS(W, 'numId');
+        if (id != null && !('n' + id in map)) map['n' + id] = new XMLSerializer().serializeToString(el);
+      });
+    }
+
+    // styles / numbering 合并需要读取 base 当前内容，故为异步
+    async function mergeStylesInto(parser, serializer, base, map) {
+      const sfile = base.file('word/styles.xml');
+      if (!sfile) return null;
+      const doc = parser.parseFromString(await sfile.async('string'), 'application/xml');
+      const root = doc.documentElement;
+      const existing = new Set();
+      Array.from(doc.getElementsByTagNameNS(W, 'style')).forEach(el => {
+        const id = el.getAttributeNS(W, 'styleId');
+        if (id) existing.add(id);
+      });
+      Object.keys(map).forEach(id => {
+        if (!existing.has(id)) {
+          const frag = parser.parseFromString('<root xmlns:w="' + W + '">' + map[id] + '</root>', 'application/xml');
+          root.appendChild(doc.importNode(frag.documentElement.firstChild, true));
+        }
+      });
+      return serializer.serializeToString(doc);
+    }
+
+    async function mergeNumberingInto(parser, serializer, base, map) {
+      const nfile = base.file('word/numbering.xml');
+      if (!nfile) return null;
+      const doc = parser.parseFromString(await nfile.async('string'), 'application/xml');
+      const root = doc.documentElement;
+      const existing = new Set();
+      Array.from(doc.getElementsByTagNameNS(W, 'abstractNum')).forEach(el => existing.add('a' + el.getAttributeNS(W, 'abstractNumId')));
+      Array.from(doc.getElementsByTagNameNS(W, 'num')).forEach(el => existing.add('n' + el.getAttributeNS(W, 'numId')));
+      Object.keys(map).forEach(k => {
+        if (!existing.has(k)) {
+          const frag = parser.parseFromString('<root xmlns:w="' + W + '">' + map[k] + '</root>', 'application/xml');
+          root.appendChild(doc.importNode(frag.documentElement.firstChild, true));
+        }
+      });
+      return serializer.serializeToString(doc);
+    }
+
+    function getMaxRid(relsDoc) {
+      let max = 0;
+      Array.from(relsDoc.getElementsByTagNameNS(REL_NS, 'Relationship')).forEach(rel => {
+        const m = (rel.getAttribute('Id') || '').match(/(\d+)/);
+        if (m) max = Math.max(max, +m[1]);
+      });
+      return max;
+    }
+
+    function addRelationship(relsDoc, id, type, target) {
+      const rels = relsDoc.documentElement;
+      const newRel = relsDoc.createElementNS(REL_NS, 'Relationship');
+      newRel.setAttribute('Id', id);
+      newRel.setAttribute('Type', type);
+      newRel.setAttribute('Target', target);
+      rels.appendChild(newRel);
+    }
+
+    function ensureContentType(ctDoc, ext) {
+      if (!ext) return;
+      const exists = Array.from(ctDoc.getElementsByTagNameNS(CT_NS, 'Default'))
+        .some(d => (d.getAttribute('Extension') || '').toLowerCase() === ext);
+      if (exists) return;
+      const def = ctDoc.createElementNS(CT_NS, 'Default');
+      def.setAttribute('Extension', ext);
+      def.setAttribute('ContentType', contentTypeFor(ext));
+      ctDoc.documentElement.appendChild(def);
+    }
+
+    function contentTypeFor(ext) {
+      const m = {
+        png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif',
+        bmp: 'image/bmp', svg: 'image/svg+xml', tiff: 'image/tiff', tif: 'image/tiff',
+        emf: 'image/x-emf', wmf: 'image/x-wmf', webp: 'image/webp'
+      };
+      return m[ext] || 'application/octet-stream';
+    }
+
+    function remapRids(xml, map) {
+      if (!map || !Object.keys(map).length) return xml;
+      return xml
+        .replace(/r:embed="([^"]+)"/g, (m, rid) => 'r:embed="' + (map[rid] || rid) + '"')
+        .replace(/r:link="([^"]+)"/g, (m, rid) => 'r:link="' + (map[rid] || rid) + '"');
+    }
+
+    function ensureDocNamespaces(xml) {
+      const ns = {
+        'xmlns:w': 'http://schemas.openxmlformats.org/wordprocessingml/2006/main',
+        'xmlns:r': 'http://schemas.openxmlformats.org/officeDocument/2006/relationships',
+        'xmlns:wp': 'http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing',
+        'xmlns:a': 'http://schemas.openxmlformats.org/drawingml/2006/main',
+        'xmlns:pic': 'http://schemas.openxmlformats.org/drawingml/2006/picture',
+        'xmlns:mc': 'http://schemas.openxmlformats.org/markup-compatibility/2006',
+        'xmlns:wps': 'http://schemas.microsoft.com/office/word/2010/wordprocessingShape',
+        'xmlns:wpg': 'http://schemas.microsoft.com/office/word/2010/wordprocessingGroup',
+        'xmlns:wpc': 'http://schemas.microsoft.com/office/word/2010/wordprocessingCanvas',
+        'xmlns:wp14': 'http://schemas.microsoft.com/office/word/2010/wordprocessingDrawing'
+      };
+      return xml.replace(/<w:document\b[^>]*>/, m => {
+        let s = m;
+        for (const k in ns) {
+          if (!new RegExp(k + '=').test(s)) {
+            s = s.replace(/\s*>$/, ' ' + k + '="' + ns[k] + '">');
+          }
+        }
+        return s;
+      });
+    }
+  })();
+  </script>
+</body>
+</html>

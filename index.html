@@ -114,6 +114,30 @@
   }
   .utils .btn{ width:100%; }
   .utils:empty{ display:none; }
+  /* 分组入口（如「文档处理」）*/
+  .group{ grid-column:1/-1; }
+  .group-head{
+    display:flex; flex-direction:column; align-items:flex-start; gap:6px;
+    width:100%; font:inherit; text-align:left; cursor:pointer;
+    border:1px solid var(--line); border-radius:16px; padding:18px;
+    background:#fff; color:var(--txt); box-shadow:0 1px 2px rgba(15,23,42,.05);
+    transition:transform .2s, box-shadow .2s, border-color .2s; position:relative;
+  }
+  .group-head:hover{ transform:translateY(-2px); border-color:rgba(37,99,235,.35); box-shadow:0 12px 28px -12px rgba(37,99,235,.35); }
+  .group-head .ico{font-size:22px;line-height:1}
+  .group-head .name{font-size:15px;font-weight:600}
+  .group-head .hint{font-size:12px;color:var(--sub)}
+  .group-head .chev{ position:absolute; right:18px; top:50%; transform:translateY(-50%); font-size:13px; color:var(--sub); transition:transform .2s; }
+  .group-head.open .chev{ transform:translateY(-50%) rotate(90deg); }
+  .group-head.primary{ border-color:rgba(37,99,235,.3); background:linear-gradient(92deg,#e8f1ff,#e0f7ff); color:#1d4ed8; box-shadow:0 8px 20px -12px rgba(37,99,235,.4); }
+  .group-head.primary .hint{color:#3b6fd4}
+  .group-head.primary:hover{ background:linear-gradient(92deg,#dbeaff,#d2f3ff); box-shadow:0 14px 28px -12px rgba(37,99,235,.5); }
+  .group-children{
+    display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
+    gap:14px; margin-top:14px; padding-left:14px;
+    border-left:3px solid rgba(37,99,235,.25);
+  }
+  .group-children .btn.child{ background:linear-gradient(92deg,#f8fbff,#f0f9ff); }
   a.btn{
     display:flex;
     flex-direction:column;
@@ -299,6 +323,25 @@
 <script>
   const ENTRIES = [
     {
+      name:'文档处理',
+      hint:'Word / Excel / PDF 等',
+      ico:'📄',
+      primary:true,
+      group:true,
+      kw:'文档处理 文档 word excel pdf 合并 转换 office docx',
+      desc:'文档处理中心，聚合 Word / Excel / PDF 等文档相关功能。目前提供「合并 Word」，后续将逐步补充更多模块。',
+      children:[
+        {
+          name:'合并 Word',
+          hint:'多份 docx 合并成一个',
+          href:'docs/merge-word.html',
+          ico:'📎',
+          kw:'合并 word docx 拼接 多个 文档 合成 顺序',
+          desc:'在浏览器本地将多份 .docx 按顺序合并为一份，保留文本、段落、表格与图片，文件不会上传服务器。'
+        }
+      ]
+    },
+    {
       name:'加解密',
       hint:'Base64 / AES / SHA1 / MD5',
       href:'crypto/crypto.html',
@@ -333,7 +376,47 @@
     return a;
   }
 
-  function render(list){
+  function matchEntry(e, q){
+    const base = (e.name + ' ' + e.hint + ' ' + (e.kw || '')).toLowerCase();
+    if(base.includes(q)) return true;
+    if(Array.isArray(e.children)) return e.children.some(c => matchEntry(c, q));
+    return false;
+  }
+
+  function makeGroup(e, autoOpen){
+    const wrap = document.createElement('div');
+    wrap.className = 'group';
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'btn group-head' + (e.primary ? ' primary' : '');
+    btn.innerHTML =
+      `<span class="ico">${e.ico}</span>` +
+      `<span class="name">${e.name}</span>` +
+      `<span class="hint">${e.hint}</span>` +
+      `<span class="chev">▸</span>`;
+    const childWrap = document.createElement('div');
+    childWrap.className = 'group-children';
+    childWrap.style.display = 'none';
+    (e.children || []).forEach(c => {
+      const a = makeBtn(c);
+      a.classList.add('child');
+      childWrap.appendChild(a);
+    });
+    btn.onclick = () => {
+      const open = childWrap.style.display === 'none';
+      childWrap.style.display = open ? 'grid' : 'none';
+      btn.classList.toggle('open', open);
+    };
+    if(autoOpen){
+      childWrap.style.display = 'grid';
+      btn.classList.add('open');
+    }
+    wrap.appendChild(btn);
+    wrap.appendChild(childWrap);
+    return wrap;
+  }
+
+  function render(list, autoOpen){
     const modules = list.filter(e => e.group !== 'util');
     const utils = list.filter(e => e.group === 'util');
     grid.innerHTML = '';
@@ -342,20 +425,18 @@
       grid.innerHTML = '<p class="empty">未找到匹配的入口，换个关键词试试～</p>';
       return;
     }
-    modules.forEach(e => grid.appendChild(makeBtn(e)));
+    modules.forEach(e => grid.appendChild(Array.isArray(e.children) ? makeGroup(e, autoOpen) : makeBtn(e)));
     utils.forEach(e => utilsEl.appendChild(makeBtn(e)));
   }
 
   function filter(q){
     q = q.trim().toLowerCase();
-    const list = q
-      ? ENTRIES.filter(e => (e.name + ' ' + e.hint + ' ' + e.kw).toLowerCase().includes(q))
-      : ENTRIES;
-    render(list);
+    const list = q ? ENTRIES.filter(e => matchEntry(e, q)) : ENTRIES;
+    render(list, !!q);
   }
 
   searchInput.addEventListener('input', e => filter(e.target.value));
-  render(ENTRIES);
+  render(ENTRIES, false);
 </script>
 <script src="assets/snippets.js"></script>
 <script src="assets/localdb-panel.js"></script>
@@ -464,13 +545,24 @@
   (function () {
     const $ = id => document.getElementById(id);
     const list = (typeof ENTRIES !== 'undefined') ? ENTRIES : [];
-    const mods = list.map(e =>
-      '<div class="mod">' +
-        '<div class="nm">' + (e.ico || '') + ' ' + e.name + '</div>' +
-        '<div class="h">' + e.hint + '</div>' +
-        '<div class="d">' + (e.desc || '') + '</div>' +
-      '</div>'
-    ).join('');
+    const mods = list.map(e => {
+      let html =
+        '<div class="mod">' +
+          '<div class="nm">' + (e.ico || '') + ' ' + e.name + '</div>' +
+          '<div class="h">' + e.hint + '</div>' +
+          '<div class="d">' + (e.desc || '') + '</div>' +
+        '</div>';
+      if(Array.isArray(e.children) && e.children.length){
+        html += e.children.map(c =>
+          '<div class="mod" style="margin-left:14px;border-left:3px solid rgba(37,99,235,.3)">' +
+            '<div class="nm">' + (c.ico || '') + ' ' + c.name + '</div>' +
+            '<div class="h">' + c.hint + '</div>' +
+            '<div class="d">' + (c.desc || '') + '</div>' +
+          '</div>'
+        ).join('');
+      }
+      return html;
+    }).join('');
 
     const helpBox = document.createElement('div');
     helpBox.className = 'home-help';
